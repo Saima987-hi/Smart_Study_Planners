@@ -1,27 +1,39 @@
-using Smart_Study_Planner.Components;
+using Microsoft.EntityFrameworkCore;
+using Smart_Study_Planner.Models.SmartStudyPlanner.Data;
+using Smart_Study_Planner.Models.SmartStudyPlanner.Services;
+using SmartStudyPlanner.Data;
+using SmartStudyPlanner.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=smartstudy.db"));
+
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Ensure DB is created
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
 
-app.UseAntiforgery();
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
 
 app.Run();
