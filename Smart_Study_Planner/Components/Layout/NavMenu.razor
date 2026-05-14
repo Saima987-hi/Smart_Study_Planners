@@ -1,40 +1,47 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Smart_Study_Planner</a>
+﻿<div class="ssp-sidebar">
+    <div class="sidebar-brand">
+        <img src="logo.png" alt="A" class="brand-logo" />
+        <div class="brand-text">
+            <span class="brand-title">Smart Study</span>
+            <span class="brand-subtitle">Planner</span>
+        </div>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+    <nav class="flex-column nav-pills mt-4">
+        <div class="nav-item">
+            <NavLink class="nav-link" href="DashBoard" Match="NavLinkMatch.All">
+                <i class="bi bi-grid-fill"></i> Dashboard
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+        <div class="nav-item">
+            <NavLink class="nav-link" href="schedule">
+                <i class="bi bi-calendar-event"></i> Schedule
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> weather
+        <div class="nav-item">
+            <NavLink class="nav-link" href="tasks">
+                <i class="bi bi-check2-square"></i> Tasks
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Login
+
+        <div class="nav-item">
+            <NavLink class="nav-link" href="pomodoro">
+                <i class="bi bi-alarm"></i> Pomodoro
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="DashBoard">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> DashBoard
+
+        <div class="nav-item">
+            <NavLink class="nav-link" href="analytics">
+                <i class="bi bi-bar-chart-line"></i> Analytics
+            </NavLink>
+        </div>
+
+        <div class="nav-item mt-auto">
+            <NavLink class="nav-link" href="settings">
+                <i class="bi bi-gear"></i> Settings
             </NavLink>
         </div>
     </nav>
 </div>
-
