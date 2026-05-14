@@ -1,23 +1,13 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using SmartStudyPlanner.Services
+@inject AuthService Auth
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
-    <ResourcePreloader />
-    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
-    <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="@Assets["Smart_Study_Planner.styles.css"]" />
-    <ImportMap />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet />
-</head>
-
-<body>
-    <Routes />
-    <ReconnectModal />
-    <script src="@Assets["_framework/blazor.web.js"]"></script>
-</body>
-
-</html>
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Components.Layout.MainLayout)" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(Components.Layout.MainLayout)">
+            <p>Sorry, nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
