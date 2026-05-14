@@ -1,4 +1,10 @@
-﻿<div class="pomodoro-container">
+﻿@page "/pomodoro"
+@using Smart_Study_Planner.Services
+@using Smart_Study_Planner.Data
+@inject AuthService Auth
+@inject AppDbContext Db
+@inject NavigationManager Nav
+<div class="pomodoro-container">
     <div class="pomodoro-header">
         <h2 class="page-title">Smart Study Pomodoro</h2>
     </div>
@@ -59,7 +65,7 @@
                         <div class="bar-chart-flex">
                             @foreach (var val in new[] { 40, 60, 35, 75, 50, 65, 85 })
                             {
-                                <div class="bar-wrap"><div class="bar-fill" style="height:@(val)%"></div></div>
+                                <div class="bar-wrap"><div class="bar-fill" style="@($"height:{val}%")"></div></div>
                             }
                         </div>
                     </div>
@@ -68,7 +74,7 @@
                         <div class="bar-chart-flex">
                             @foreach (var val in new[] { 70, 85, 60, 95, 75, 80, 100 })
                             {
-                                <div class="bar-wrap"><div class="bar-fill" style="height:@(val)%"></div></div>
+                                <div class="bar-wrap"><div class="bar-fill" style="@($"height:{val}%")"></div></div>
                             }
                         </div>
                     </div>

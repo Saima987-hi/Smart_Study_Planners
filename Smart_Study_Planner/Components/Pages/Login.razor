@@ -57,7 +57,10 @@
                         }
                         Login
                     </button>
-
+                    @if (!string.IsNullOrEmpty(successMsg))
+                    {
+                        <p class="text-success">@successMsg</p>
+                    }
                     <button class="btn btn-outline-register" @onclick="GoToRegister">
                         Register as Student
                     </button>
