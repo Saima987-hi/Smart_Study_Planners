@@ -1,101 +1,190 @@
-﻿
-/* In classes ko app.css mein add karein */
-.settings-page {
-    padding: 20px;
-    background: #f8f9fa;
+﻿.settings-container {
+    padding: 40px;
+    background: #f0f5ff;
     min-height: 100vh;
 }
 
-.settings-card {
-    background: white;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    max-width: 500px;
-    margin: auto;
-}
-
-.settings-section {
-    margin-bottom: 25px;
-}
-
-.settings-section-title {
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 15px;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-}
-
-.settings-profile-row {
+.settings-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
 }
 
-.settings-avatar {
-    width: 50px;
-    height: 50px;
-    background: #1b6ec2;
+.page-title {
+    font-weight: 800;
+    color: #1a202c;
+    margin: 0;
+}
+
+/* Laptop Grid */
+.settings-laptop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr; /* Left col smaller, Right col larger */
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.glass-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    border: 1px solid #e2e8f0;
+}
+
+/* Profile Card Styling */
+.card-head-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.avatar-large {
+    width: 60px;
+    height: 60px;
+    background: #3182ce;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.5rem;
     font-weight: bold;
-    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
 }
 
-.settings-toggle-row {
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+}
+
+.p-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.p-email {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+/* Custom Switches */
+.toggle-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f1f1;
+    padding: 15px 0;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-/* Toggle Switch Design */
-.toggle-switch {
-    width: 45px;
-    height: 24px;
-    background: #ccc;
-    border-radius: 12px;
+.ssp-switch {
+    width: 50px;
+    height: 26px;
+    background: #cbd5e0;
+    border-radius: 50px;
     position: relative;
     cursor: pointer;
     transition: 0.3s;
 }
 
-    .toggle-switch.on {
-        background: #1b6ec2;
+    .ssp-switch.active {
+        background: #3182ce;
     }
 
-.toggle-knob {
+.ssp-knob {
     width: 20px;
     height: 20px;
     background: white;
     border-radius: 50%;
     position: absolute;
-    top: 2px;
-    left: 2px;
+    top: 3px;
+    left: 3px;
     transition: 0.3s;
 }
 
-.toggle-switch.on .toggle-knob {
+.ssp-switch.active .ssp-knob {
+    left: 27px;
+}
+
+/* Theme Toggle Box */
+.theme-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #edf2f7;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.theme-switch-track {
+    width: 40px;
+    height: 20px;
+    background: #4a5568;
+    border-radius: 20px;
+    position: relative;
+}
+
+.theme-knob {
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: 0.3s;
+}
+
+.is-dark .theme-knob {
     left: 23px;
 }
 
-/* Dashboard Grid */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    padding: 20px;
+/* Subject List */
+.subject-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
 }
 
-.dash-card {
+.s-name {
+    font-weight: 600;
+    display: block;
+    color: #2d3748;
+}
+
+.s-weakness {
+    font-size: 0.75rem;
+    color: #e53e3e;
+}
+
+.trash-btn {
+    background: none;
+    border: none;
+    color: #a0aec0;
+    transition: 0.2s;
+}
+
+    .trash-btn:hover {
+        color: #e53e3e;
+    }
+
+.nav-back-btn {
     background: white;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
