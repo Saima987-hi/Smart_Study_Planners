@@ -1,456 +1,138 @@
-﻿@page "/login"
+﻿@page "/"
+@page "/login"
+@using SmartStudyPlanner.Services
+@inject AuthService Auth
+@inject NavigationManager Nav
 
-<PageTitle>Smart Study Planner - Login</PageTitle>
+@if (Auth.IsLoggedIn)
+{
+    Nav.NavigateTo("/dashboard");
+    return;
+}
 
-<div class="page-wrapper">
-
-    <!-- ════════════════ LEFT PANEL ════════════════ -->
-    <div class="left-panel">
-        <!-- Decorative geometric shapes (light translucent squares/rects) -->
-        <div class="geo g1"></div>
-        <div class="geo g2"></div>
-        <div class="geo g3"></div>
-        <div class="geo g4"></div>
-        <div class="geo g5"></div>
-
-        <!-- Branding text -->
-        <div class="brand">
-            <h1>Smart Study Planner</h1>
-            <p>Unlock your academic potential</p>
+<div class="login-wrapper">
+    <!-- Left Panel -->
+    <div class="login-left">
+        <div class="login-left-content">
+            <div class="login-circles">
+                <div class="circle c1"></div>
+                <div class="circle c2"></div>
+                <div class="circle c3"></div>
+            </div>
+            <h1 class="login-headline">Smart Study Planner</h1>
+            <p class="login-tagline">Unlock your academic potential</p>
         </div>
     </div>
 
-    <!-- ════════════════ RIGHT PANEL ════════════════ -->
-    <div class="right-panel">
-        <div class="card">
-
-            <!-- Logo "A" -->
-            <div class="logo">
-                <svg viewBox="0 0 60 68" width="52" height="60" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="aGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#7EB8E8" />
-                            <stop offset="40%" stop-color="#4A8DC0" />
-                            <stop offset="100%" stop-color="#1E4D78" />
-                        </linearGradient>
-                        <linearGradient id="aShine" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#AACFE8" stop-opacity="0.9" />
-                            <stop offset="100%" stop-color="#2C6090" stop-opacity="0.4" />
-                        </linearGradient>
-                    </defs>
-                    <!-- Main A shape -->
-                    <text x="50%" y="78%" text-anchor="middle" dominant-baseline="auto"
-                          font-family="Georgia, 'Times New Roman', serif"
-                          font-size="64" font-weight="bold"
-                          fill="url(#aGrad)">A</text>
-                    <!-- Shine overlay -->
-                    <text x="50%" y="78%" text-anchor="middle" dominant-baseline="auto"
-                          font-family="Georgia, 'Times New Roman', serif"
-                          font-size="64" font-weight="bold"
-                          fill="url(#aShine)" opacity="0.5">A</text>
-                </svg>
+    <!-- Right Panel -->
+    <div class="login-right">
+        <div class="login-card">
+            <div class="login-logo">
+                <span>A</span>
             </div>
 
-            <!-- ── Form ── -->
-            <EditForm Model="@model" OnValidSubmit="HandleLogin">
-                <DataAnnotationsValidator />
-
-                <!-- Email field -->
-                <div class="field">
-                    <div class="input-box @(emailFocused ? "focused" : "")">
-                        <span class="ico">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="4" width="20" height="16" rx="2" />
-                                <polyline points="2,4 12,13 22,4" />
-                            </svg>
-                        </span>
-                        <InputText @bind-Value="model.Email"
-                                   class="inp"
-                                   placeholder="Email Address"
-                                   type="email"
-                                   @onfocus="@(() => emailFocused = true)"
-                                   @onblur="@(() => emailFocused = false)" />
-                    </div>
-                    <ValidationMessage For="@(() => model.Email)" class="vmsg" />
-                </div>
-
-                <!-- Password field -->
-                <div class="field">
-                    <div class="input-box @(pwFocused ? "focused" : "")">
-                        <span class="ico">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                        </span>
-                        <InputText @bind-Value="model.Password"
-                                   class="inp"
-                                   placeholder="Password"
-                                   type="@(showPw ? "text" : "password")"
-                                   @onfocus="@(() => pwFocused = true)"
-                                   @onblur="@(() => pwFocused = false)" />
-                        <button type="button" class="eye-btn" @onclick="@(() => showPw = !showPw)" tabindex="-1">
-                            @if (showPw)
-                            {
-                                <!-- Eye-off icon -->
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                     stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                                    <line x1="1" y1="1" x2="23" y2="23" />
-                                </svg>
-                            }
-                            else
-                            {
-                                <!-- Eye icon -->
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                     stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                            }
-                        </button>
-                    </div>
-                    <ValidationMessage For="@(() => model.Password)" class="vmsg" />
-                </div>
-
-                <!-- Forgot Password -->
-                <div class="forgot-row">
-                    <a href="/forgot-password" class="forgot-link">Forgot Password?</a>
-                </div>
-
-                <!-- Login Button -->
-                <button type="submit" class="btn-login" disabled="@isLoading">
-                    @if (isLoading)
-                    {
-                        <span class="spinner"></span>
-                    }
-                    else
-                    {
-                        @("Login")
-                    }
-                </button>
-
-            </EditForm>
-
-            <!-- Register Button (outside form) -->
-            <button type="button" class="btn-register" @onclick="GoToRegister">
-                Register as Student
-            </button>
-
-            <!-- Error -->
-            @if (!string.IsNullOrEmpty(error))
+            @if (!string.IsNullOrEmpty(errorMsg))
             {
-                <div class="err-box">@error</div>
+                <div class="alert alert-danger py-2 small">@errorMsg</div>
+            }
+            @if (!string.IsNullOrEmpty(successMsg))
+            {
+                <div class="alert alert-success py-2 small">@successMsg</div>
             }
 
+            @if (!isRegister)
+            {
+                <!-- Login Form -->
+                <div class="login-form">
+                    <div class="input-group-custom">
+                        <i class="bi bi-envelope"></i>
+                        <input @bind="email" type="email" class="form-control" placeholder="Email Address" />
+                    </div>
+                    <div class="input-group-custom">
+                        <i class="bi bi-lock"></i>
+                        <input @bind="password" type="@passType" class="form-control" placeholder="Password" />
+                        <button class="pass-toggle" @onclick="TogglePass">
+                            <i class="bi @eyeIcon"></i>
+                        </button>
+                    </div>
+                    <div class="text-end mb-3">
+                        <a href="#" class="forgot-link">Forgot Password?</a>
+                    </div>
+                    <button class="btn btn-login" @onclick="DoLogin" disabled="@loading">
+                        @if (loading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Login
+                    </button>
+                    <button class="btn btn-register" @onclick="GoToRegister">
+                        Register as Student
+                    </button>
+                </div>
+            }
+            else
+            {
+                <!-- Register Form -->
+                <div class="login-form">
+                    <div class="input-group-custom">
+                        <i class="bi bi-person"></i>
+                        <input @bind="name" type="text" class="form-control" placeholder="Full Name" />
+                    </div>
+                    <div class="input-group-custom">
+                        <i class="bi bi-envelope"></i>
+                        <input @bind="email" type="email" class="form-control" placeholder="Email Address" />
+                    </div>
+                    <div class="input-group-custom">
+                        <i class="bi bi-lock"></i>
+                        <input @bind="password" type="@passType" class="form-control" placeholder="Password" />
+                        <button class="pass-toggle" @onclick="TogglePass">
+                            <i class="bi @eyeIcon"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-login" @onclick="DoRegister" disabled="@loading">
+                        @if (loading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Create Account
+                    </button>
+                    <button class="btn btn-register" @onclick="GoToLogin">
+                        Back to Login
+                    </button>
+                </div>
+            }
         </div>
     </div>
 </div>
 
 @code {
-    private FormModel model = new();
-    private bool showPw = false;
-    private bool isLoading = false;
-    private string error = "";
-    private bool emailFocused = false;
-    private bool pwFocused = false;
+    string email = "", password = "", name = "";
+    string errorMsg = "", successMsg = "";
+    bool loading = false, showPass = false, isRegister = false;
 
-    private async Task HandleLogin()
+    string passType => showPass ? "text" : "password";
+    string eyeIcon => showPass ? "bi-eye-slash" : "bi-eye";
+
+    void TogglePass() => showPass = !showPass;
+    void GoToRegister() { isRegister = true; errorMsg = ""; }
+    void GoToLogin() { isRegister = false; errorMsg = ""; }
+
+    async Task DoLogin()
     {
-        isLoading = true;
-        error = "";
-        await Task.Delay(1000);          // ← replace with real auth
-        // example error: error = "Invalid email or password.";
-        isLoading = false;
+        loading = true; errorMsg = "";
+        var (ok, msg) = await Auth.LoginAsync(email, password);
+        loading = false;
+        if (ok) Nav.NavigateTo("/dashboard");
+        else errorMsg = msg;
     }
 
-    private void GoToRegister()
+    async Task DoRegister()
     {
-        // NavigationManager.NavigateTo("/register");
-    }
-
-    public class FormModel
-    {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Email is required")]
-        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Enter a valid email")]
-        public string Email { get; set; } = "";
-
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Password is required")]
-        public string Password { get; set; } = "";
+        loading = true; errorMsg = "";
+        if (string.IsNullOrWhiteSpace(name)) { errorMsg = "Name is required."; loading = false; return; }
+        var (ok, msg) = await Auth.RegisterAsync(name, email, password);
+        loading = false;
+        if (ok) Nav.NavigateTo("/dashboard");
+        else errorMsg = msg;
     }
 }
-
-<style>
-    /* ═══════════════════════════════════════════════════════
-       CSS VARIABLES  — reuse these across all future pages
-    ═══════════════════════════════════════════════════════ */
-    :root {
-        --c-blue-dark   : #1E3F6E;
-        --c-blue-mid    : #2D6096;
-        --c-blue-light  : #5B9BD5;
-        --c-panel-bg    : #C8DCF0;   /* left panel base */
-        --c-right-bg    : #E8EFF6;   /* right panel bg  */
-        --c-card-bg     : #FFFFFF;
-        --c-border      : #D5E2EE;
-        --c-focus       : #3A7BD5;
-        --c-text        : #1C3148;
-        --c-muted       : #8BA5BC;
-        --c-btn         : #1E3F6E;
-        --c-btn-hover   : #163258;
-        --radius-input  : 8px;
-        --radius-card   : 14px;
-        --radius-btn    : 8px;
-        --shadow-card   : 0 4px 24px rgba(20, 50, 90, 0.10);
-        --font          : 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    }
-
-    /* ── Reset ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    a { text-decoration: none; }
-    button { cursor: pointer; font-family: var(--font); }
-
-    /* ── Page wrapper ────────────────────────────────────── */
-    .page-wrapper {
-        display          : flex;
-        min-height       : 100vh;
-        font-family      : var(--font);
-        background       : var(--c-right-bg);
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       LEFT PANEL
-    ═══════════════════════════════════════════════════════ */
-    .left-panel {
-        flex             : 1;
-        position         : relative;
-        overflow         : hidden;
-        display          : flex;
-        align-items      : center;
-        justify-content  : flex-start;
-        padding          : 0 0 0 9%;
-
-        /* gradient matching the screenshot — light-blue top, slightly deeper bottom */
-        background       : linear-gradient(160deg,
-                               #B8D4EC 0%,
-                               #92BCE0 35%,
-                               #7AADD6 65%,
-                               #6A9FCC 100%);
-    }
-
-    /* ── Geometric shapes ────────────────────────────────── */
-    .geo {
-        position  : absolute;
-        border-radius : 10px;
-        background: rgba(255,255,255,0.13);
-    }
-
-    /* large tilted square – top-left */
-    .g1 { width:210px; height:210px; top:-40px;  left:-40px;  transform: rotate(28deg); }
-    /* medium – upper-centre */
-    .g2 { width:130px; height:130px; top:40px;   left:42%;    transform: rotate(-14deg); background:rgba(255,255,255,0.10); }
-    /* small – mid-left */
-    .g3 { width: 90px; height: 90px; top:44%;    left:6%;     transform: rotate(18deg);  background:rgba(255,255,255,0.09); }
-    /* large – bottom-right area */
-    .g4 { width:170px; height:170px; bottom:-50px; left:30%;  transform: rotate(-22deg); }
-    /* small accent top-right */
-    .g5 { width: 70px; height: 70px; top:18%;    left:62%;    transform: rotate(10deg);  background:rgba(255,255,255,0.08); }
-
-    /* ── Brand text ──────────────────────────────────────── */
-    .brand { position:relative; z-index:2; }
-
-    .brand h1 {
-        font-size    : 1.85rem;
-        font-weight  : 700;
-        color        : #17304D;
-        line-height  : 1.2;
-        margin-bottom: .45rem;
-        letter-spacing: -.2px;
-    }
-
-    .brand p {
-        font-size : .95rem;
-        color     : #2A4E70;
-        font-weight: 400;
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       RIGHT PANEL
-    ═══════════════════════════════════════════════════════ */
-    .right-panel {
-        width           : 400px;
-        flex-shrink     : 0;
-        background      : var(--c-right-bg);
-        display         : flex;
-        align-items     : center;
-        justify-content : center;
-        padding         : 2rem 1.5rem;
-    }
-
-    /* ── Card ────────────────────────────────────────────── */
-    .card {
-        background    : var(--c-card-bg);
-        border-radius : var(--radius-card);
-        padding       : 2.4rem 2rem 2rem;
-        width         : 100%;
-        max-width     : 320px;
-        box-shadow    : var(--shadow-card);
-    }
-
-    /* ── Logo ────────────────────────────────────────────── */
-    .logo {
-        display        : flex;
-        justify-content: center;
-        margin-bottom  : 1.8rem;
-    }
-
-    /* ── Form field ──────────────────────────────────────── */
-    .field { margin-bottom: .85rem; }
-
-    .input-box {
-        display      : flex;
-        align-items  : center;
-        border       : 1.5px solid var(--c-border);
-        border-radius: var(--radius-input);
-        background   : #F7FAFE;
-        transition   : border-color .18s, box-shadow .18s, background .18s;
-    }
-
-    .input-box.focused,
-    .input-box:focus-within {
-        border-color : var(--c-focus);
-        box-shadow   : 0 0 0 3px rgba(58,123,213,.10);
-        background   : #fff;
-    }
-
-    .ico {
-        padding : 0 0 0 11px;
-        display : flex;
-        align-items: center;
-        color   : var(--c-muted);
-        flex-shrink: 0;
-    }
-
-    .inp {
-        flex       : 1;
-        border     : none;
-        background : transparent;
-        padding    : 10px 10px;
-        font-size  : .855rem;
-        color      : var(--c-text);
-        outline    : none;
-        font-family: var(--font);
-        min-width  : 0;
-    }
-
-    .inp::placeholder { color: var(--c-muted); font-size: .855rem; }
-
-    .eye-btn {
-        background : none;
-        border     : none;
-        padding    : 0 11px;
-        display    : flex;
-        align-items: center;
-        color      : var(--c-muted);
-        flex-shrink: 0;
-        transition : color .15s;
-    }
-    .eye-btn:hover { color: var(--c-blue-mid); }
-
-    .vmsg {
-        display    : block;
-        font-size  : .71rem;
-        color      : #CC3A3A;
-        margin-top : 3px;
-        padding-left: 3px;
-    }
-
-    /* ── Forgot row ──────────────────────────────────────── */
-    .forgot-row {
-        text-align   : right;
-        margin-top   : -.1rem;
-        margin-bottom: 1.1rem;
-    }
-
-    .forgot-link {
-        font-size  : .78rem;
-        color      : #4A7DB8;
-        transition : color .15s;
-    }
-    .forgot-link:hover { color: var(--c-blue-dark); text-decoration: underline; }
-
-    /* ── Login button ────────────────────────────────────── */
-    .btn-login {
-        width          : 100%;
-        padding        : 11px 0;
-        background     : var(--c-btn);
-        color          : #fff;
-        border         : none;
-        border-radius  : var(--radius-btn);
-        font-size      : .88rem;
-        font-weight    : 600;
-        letter-spacing : .35px;
-        display        : flex;
-        align-items    : center;
-        justify-content: center;
-        transition     : background .18s, transform .1s;
-        margin-bottom  : .75rem;
-    }
-    .btn-login:hover:not(:disabled)  { background: var(--c-btn-hover); }
-    .btn-login:active:not(:disabled) { transform: translateY(1px); }
-    .btn-login:disabled              { opacity: .65; cursor: not-allowed; }
-
-    /* ── Register button ─────────────────────────────────── */
-    .btn-register {
-        width         : 100%;
-        padding       : 10px 0;
-        background    : transparent;
-        color         : var(--c-text);
-        border        : 1.5px solid var(--c-border);
-        border-radius : var(--radius-btn);
-        font-size     : .88rem;
-        font-weight   : 500;
-        transition    : border-color .18s, background .18s, color .18s;
-    }
-    .btn-register:hover {
-        border-color : var(--c-focus);
-        background   : #EEF5FF;
-        color        : var(--c-blue-mid);
-    }
-
-    /* ── Spinner ─────────────────────────────────────────── */
-    .spinner {
-        width         : 16px;
-        height        : 16px;
-        border        : 2px solid rgba(255,255,255,.3);
-        border-top-color: #fff;
-        border-radius : 50%;
-        display       : inline-block;
-        animation     : spin .65s linear infinite;
-    }
-    @@keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Error box ───────────────────────────────────────── */
-    .err-box {
-        margin-top   : .9rem;
-        padding      : 9px 13px;
-        background   : #FFF1F0;
-        border       : 1px solid #F5C0BE;
-        border-radius: 7px;
-        color        : #C0392B;
-        font-size    : .78rem;
-        text-align   : center;
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       RESPONSIVE
-    ═══════════════════════════════════════════════════════ */
-    @@media (max-width: 660px) {
-        .page-wrapper  { flex-direction: column; }
-        .left-panel    { min-height: 160px; flex: none; padding: 2rem 2rem; }
-        .right-panel   { width: 100%; }
-        .brand h1      { font-size: 1.4rem; }
-    }
-</style>
