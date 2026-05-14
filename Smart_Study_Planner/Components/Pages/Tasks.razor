@@ -1,0 +1,177 @@
+﻿@page "/settings"
+@using SmartStudyPlanner.Services
+@using SmartStudyPlanner.Models
+@using SmartStudyPlanner.Data
+@using Microsoft.EntityFrameworkCore
+@inject AuthService Auth
+@inject AppDbContext Db
+@inject NavigationManager Nav
+
+@if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
+
+<div class="settings-page">
+    <div class="settings-card">
+
+        <!-- Profile Section -->
+        <div class="settings-section">
+            <div class="settings-profile-row">
+                <div class="settings-avatar">@(Auth.CurrentUser?.Name?.Substring(0, 1).ToUpper())</div>
+                <div>
+                    <div class="fw-semibold fs-5">@Auth.CurrentUser?.Name</div>
+                    <div class="text-muted small">@Auth.CurrentUser?.Email</div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary ms-auto">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </button>
+            </div>
+            <hr class="ssp-divider" />
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="settings-link-text">ASP.NET Identity</span>
+                <a href="#" class="settings-link-btn">Settings <i class="bi bi-chevron-right"></i></a>
+            </div>
+        </div>
+
+        <!-- Smart Scheduler Preferences -->
+        <div class="settings-section">
+            <h6 class="settings-section-title">Smart Scheduler Preferences</h6>
+            <div class="settings-toggle-row">
+                <span>Difficult subjects get more time</span>
+                <div class="toggle-switch @(smartScheduler ? "on" : "")" @onclick="() => { smartScheduler = !smartScheduler; SaveSettings(); }">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="settings-toggle-row">
+                <span>Near exams high priority</span>
+                <div class="toggle-switch @(nearExam ? "on" : "")" @onclick="() => { nearExam = !nearExam; SaveSettings(); }">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="settings-section">
+            <h6 class="settings-section-title">Appearance</h6>
+            <div class="theme-toggle-row">
+                <span>Light Theme</span>
+                <div class="theme-switch @(darkTheme ? "dark" : "light")" @onclick="() => { darkTheme = !darkTheme; SaveSettings(); }">
+                    <div class="theme-knob"></div>
+                </div>
+                <span>Dark Theme</span>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="settings-section">
+            <h6 class="settings-section-title">Notifications</h6>
+            <div class="settings-toggle-row">
+                <span>Study time</span>
+                <div class="toggle-switch @(notifyStudy ? "on" : "")" @onclick="() => { notifyStudy = !notifyStudy; SaveSettings(); }">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+            <div class="settings-toggle-row">
+                <span>Email reminders</span>
+                <div class="toggle-switch @(notifyEmail ? "on" : "")" @onclick="() => { notifyEmail = !notifyEmail; SaveSettings(); }">
+                    <div class="toggle-knob"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subjects Management -->
+        <div class="settings-section">
+            <h6 class="settings-section-title">My Subjects</h6>
+            <div class="d-flex gap-2 mb-2">
+                <input @bind="newSubjectName" class="form-control ssp-input" placeholder="Add subject..." />
+                <button class="btn btn-login px-3" @onclick="AddSubject">Add</button>
+            </div>
+            @foreach (var s in subjects)
+            {
+                <div class="settings-toggle-row">
+                    <span>@s.Name</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <small class="text-muted">Weakness: @s.WeaknessPercent%</small>
+                        <button class="btn btn-sm btn-outline-danger py-0" @onclick="() => RemoveSubject(s)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Account & Privacy -->
+        <div class="settings-section text-center">
+            <button class="btn btn-register w-100 mb-2" @onclick="Logout">
+                <i class="bi bi-box-arrow-right me-2"></i>Logout
+            </button>
+            <button class="btn btn-outline-secondary w-100">
+                <i class="bi bi-shield-lock me-2"></i>Account & Privacy
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(saveMsg))
+        {
+            <div class="alert alert-success py-1 small mt-2">@saveMsg</div>
+        }
+    </div>
+</div>
+
+@code {
+    bool smartScheduler = true, nearExam = true, darkTheme = false, notifyStudy = true, notifyEmail = false;
+    List<Subject> subjects = new();
+    string newSubjectName = "";
+    string saveMsg = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn) return;
+        var u = Auth.CurrentUser!;
+        smartScheduler = u.SmartScheduler;
+        nearExam = u.NearExamPriority;
+        darkTheme = u.DarkTheme;
+        notifyStudy = u.NotifyStudyTime;
+        notifyEmail = u.NotifyEmail;
+        subjects = await Db.Subjects.Where(s => s.UserId == u.Id).ToListAsync();
+    }
+
+    async void SaveSettings()
+    {
+        var user = await Db.Users.FindAsync(Auth.CurrentUser!.Id);
+        if (user == null) return;
+        user.SmartScheduler = smartScheduler;
+        user.NearExamPriority = nearExam;
+        user.DarkTheme = darkTheme;
+        user.NotifyStudyTime = notifyStudy;
+        user.NotifyEmail = notifyEmail;
+        Auth.CurrentUser!.DarkTheme = darkTheme;
+        await Db.SaveChangesAsync();
+        saveMsg = "Saved!";
+        StateHasChanged();
+        await Task.Delay(1500);
+        saveMsg = "";
+        StateHasChanged();
+    }
+
+    async Task AddSubject()
+    {
+        if (string.IsNullOrWhiteSpace(newSubjectName)) return;
+        var s = new Subject { UserId = Auth.CurrentUser!.Id, Name = newSubjectName, WeaknessPercent = 50 };
+        Db.Subjects.Add(s);
+        await Db.SaveChangesAsync();
+        subjects.Add(s);
+        newSubjectName = "";
+    }
+
+    async Task RemoveSubject(Subject s)
+    {
+        Db.Subjects.Remove(s);
+        await Db.SaveChangesAsync();
+        subjects.Remove(s);
+    }
+
+    void Logout()
+    {
+        Auth.Logout();
+        Nav.NavigateTo("/login");
+    }
+}
+
