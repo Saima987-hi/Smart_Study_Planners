@@ -110,3 +110,49 @@
         </div>
     </div>
 </div>
+@code {
+    // Ye variables missing hain isliye error aa raha hai
+    private List<string> selectedSubjects = new() { "OOP", "Networking" };
+    private List<Subject> allSubjects = new();
+    private List<ScheduleEntry> scheduleEntries = new();
+    private List<StudyTask> taskList = new();
+
+    private string subjectInput = "";
+    private DateTime? examDate1;
+    private DateTime? examDate2;
+    private string availableHours = "4";
+
+    private string[] days = { "Monday", "Tuesday", "Wednesday" };
+    private string[] timeSlots = { "09:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn) return;
+        int uid = Auth.CurrentUser!.Id;
+
+        // Database se data load karna
+        allSubjects = await Db.Subjects.Where(s => s.UserId == uid).ToListAsync();
+        scheduleEntries = await Db.ScheduleEntries.Where(e => e.UserId == uid).ToListAsync();
+        taskList = await Db.StudyTasks.Where(t => t.UserId == uid).Take(3).ToListAsync();
+    }
+
+    private void AddSubject()
+    {
+        if (!string.IsNullOrEmpty(subjectInput) && !selectedSubjects.Contains(subjectInput))
+        {
+            selectedSubjects.Add(subjectInput);
+            subjectInput = ""; // Reset input
+        }
+    }
+
+    private async Task GenerateSchedule()
+    {
+        // Aapka purana schedule generation logic yahan aayega
+    }
+
+    private async Task ToggleMgmtTask(StudyTask task)
+    {
+        task.IsCompleted = !task.IsCompleted;
+        await Db.SaveChangesAsync();
+    }
+}
