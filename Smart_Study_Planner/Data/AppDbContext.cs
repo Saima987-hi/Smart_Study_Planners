@@ -3,7 +3,7 @@ using SmartStudyPlanner.Models;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace SmartStudyPlanner.Data
+namespace Smart_Study_Planner.Data
 {
     public class AppDbContext : DbContext
     {

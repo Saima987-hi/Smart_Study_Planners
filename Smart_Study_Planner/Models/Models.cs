@@ -1,4 +1,4 @@
-﻿namespace SmartStudyPlanner.Models
+﻿namespace Smart_Study_Planner.Models
 {
     public class User
     {
