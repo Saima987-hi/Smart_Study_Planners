@@ -1,5 +1,4 @@
-﻿using global::SmartStudyPlanner.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SmartStudyPlanner.Models;
 using System.Collections.Generic;
 using System.Reflection.Emit;
