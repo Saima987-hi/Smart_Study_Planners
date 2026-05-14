@@ -1,0 +1,159 @@
+﻿@page "/schedule"
+@using SmartStudyPlanner.Services
+@using SmartStudyPlanner.Models
+@using SmartStudyPlanner.Data
+@using Microsoft.EntityFrameworkCore
+@inject AuthService Auth
+@inject AppDbContext Db
+@inject NavigationManager Nav
+
+@if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
+
+<div class="schedule-layout">
+    <!-- Left: Input Parameters -->
+    <div class="dash-card schedule-input-card">
+        <h6 class="card-heading">Input Parameters</h6>
+
+        <label class="ssp-label">Subjects</label>
+        <div class="tags-input mb-2">
+            @foreach (var s in selectedSubjects)
+            {
+                <span class="subject-tag">@s <button @onclick="() => selectedSubjects.Remove(s)">×</button></span>
+            }
+        </div>
+        <div class="d-flex gap-2 mb-3">
+            <select @bind="subjectInput" class="form-select ssp-input">
+                <option value="">-- Select Subject --</option>
+                @foreach (var s in allSubjects)
+                {
+                    <option value="@s.Name">@s.Name</option>
+                }
+            </select>
+            <button class="btn btn-outline-primary btn-sm" @onclick="AddSubject">Add</button>
+        </div>
+
+        <label class="ssp-label">Exam Dates</label>
+        <div class="d-flex gap-2 mb-3">
+            <input @bind="examDate1" type="date" class="form-control ssp-input" />
+            <input @bind="examDate2" type="date" class="form-control ssp-input" />
+        </div>
+
+        <label class="ssp-label">Available Hours</label>
+        <select @bind="availableHours" class="form-select ssp-input mb-4">
+            <option value="2">2 hrs/day</option>
+            <option value="4" selected>4 hrs/day</option>
+            <option value="6">6 hrs/day</option>
+            <option value="8">8 hrs/day</option>
+        </select>
+
+        <button class="btn btn-login w-100" @onclick="GenerateSchedule">
+            <i class="bi bi-magic me-2"></i>Generate Timetable
+        </button>
+    </div>
+
+    <!-- Right: Timetable -->
+    <div class="dash-card schedule-table-card">
+        <h6 class="card-heading">Generated Timetable (This Week)</h6>
+
+        @foreach (var day in days)
+        {
+            <div class="timetable-day">
+                <div class="day-header">@day</div>
+                @foreach (var slot in timeSlots)
+                {
+                    var entry = scheduleEntries.FirstOrDefault(e => e.DayOfWeek == day && e.TimeSlot == slot);
+                    <div class="time-row">
+                        <span class="time-label">@slot</span>
+                        <div class="time-cell @(entry?.IsAiSuggested == true ? "ai-suggested" : "")">
+                            @if (entry != null)
+                            {
+                                <span>@entry.Title</span>
+                                @if (entry.IsAiSuggested)
+                                {
+                                    <span class="ai-badge">AI Suggested</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Task Management -->
+        <div class="task-mgmt-box mt-3">
+            <h6 class="card-heading">Task Management</h6>
+            @foreach (var task in taskList)
+            {
+                <div class="task-mgmt-row">
+                    <span>@task.Title</span>
+                    <span class="priority-badge priority-@task.Priority.ToLower()">@task.Priority</span>
+                    <input type="checkbox" checked="@task.IsCompleted" @onchange="() => ToggleMgmtTask(task)" />
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    List<string> selectedSubjects = new() { "OOP", "Networking" };
+    List<Subject> allSubjects = new();
+    List<ScheduleEntry> scheduleEntries = new();
+    List<StudyTask> taskList = new();
+    string subjectInput = "";
+    DateTime? examDate1, examDate2;
+    string availableHours = "4";
+
+    string[] days = { "Monday", "Tuesday", "Wednesday" };
+    string[] timeSlots = { "09:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn) return;
+        int uid = Auth.CurrentUser!.Id;
+        allSubjects = await Db.Subjects.Where(s => s.UserId == uid).ToListAsync();
+        scheduleEntries = await Db.ScheduleEntries.Where(e => e.UserId == uid).ToListAsync();
+        taskList = await Db.StudyTasks.Where(t => t.UserId == uid).Take(3).ToListAsync();
+    }
+
+    void AddSubject()
+    {
+        if (!string.IsNullOrEmpty(subjectInput) && !selectedSubjects.Contains(subjectInput))
+            selectedSubjects.Add(subjectInput);
+        subjectInput = "";
+    }
+
+    async Task GenerateSchedule()
+    {
+        int uid = Auth.CurrentUser!.Id;
+        var existing = Db.ScheduleEntries.Where(e => e.UserId == uid);
+        Db.ScheduleEntries.RemoveRange(existing);
+
+        var entries = new List<ScheduleEntry>();
+        var rnd = new Random();
+        foreach (var day in days)
+        {
+            var slots = timeSlots.OrderBy(_ => rnd.Next()).Take(int.Parse(availableHours) / 2).ToList();
+            foreach (var slot in slots)
+            {
+                var subj = selectedSubjects.Any() ? selectedSubjects[rnd.Next(selectedSubjects.Count)] : "Study";
+                entries.Add(new ScheduleEntry
+                {
+                    UserId = uid,
+                    Title = $"{subj} Revision",
+                    DayOfWeek = day,
+                    TimeSlot = slot,
+                    IsAiSuggested = rnd.Next(2) == 0
+                });
+            }
+        }
+        Db.ScheduleEntries.AddRange(entries);
+        await Db.SaveChangesAsync();
+        scheduleEntries = entries;
+    }
+
+    async Task ToggleMgmtTask(StudyTask task)
+    {
+        task.IsCompleted = !task.IsCompleted;
+        await Db.SaveChangesAsync();
+    }
+}
