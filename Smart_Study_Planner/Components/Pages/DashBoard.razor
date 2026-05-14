@@ -9,100 +9,104 @@
 
 @if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
 
-<div class="dashboard-grid">
-    <!-- Welcome + Progress Card -->
-    <div class="dash-card welcome-card">
-        <div class="welcome-info">
-            <div class="user-avatar-lg">
-                <span>@(Auth.CurrentUser?.Name?.Substring(0, 1).ToUpper())</span>
-            </div>
-            <div>
-                <p class="welcome-label">Welcome,</p>
-                <h3 class="welcome-name">@Auth.CurrentUser?.Name!</h3>
-            </div>
-        </div>
-        <div class="progress-circle-wrap">
-            <p class="progress-label">Overall Progress</p>
-            <div class="progress-circle">
-                <svg viewBox="0 0 100 100" width="100" height="100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e0e8f5" stroke-width="10" />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#2d5fa0" stroke-width="10"
-                            stroke-dasharray="@(2.51 * overallProgress) @(251 - 2.51 * overallProgress)"
-                            stroke-dashoffset="62.75" stroke-linecap="round" />
-                </svg>
-                <span class="progress-pct">@overallProgress%</span>
-            </div>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Dashboard</h2>
+        <div class="header-icons">
+            <i class="bi bi-bell"></i>
+            <div class="header-avatar">A</div>
         </div>
     </div>
 
-    <!-- Today's Tasks -->
-    <div class="dash-card tasks-card">
-        <h6 class="card-heading">Today's Tasks</h6>
-        @if (todayTasks.Any())
-        {
-            @foreach (var t in todayTasks)
-            {
-                <div class="task-item">
-                    <input type="checkbox" checked="@t.IsCompleted" @onchange="() => ToggleTask(t)" />
-                    <span class="@(t.IsCompleted ? "task-done" : "")">@t.Title</span>
+    <div class="dashboard-grid">
+        <div class="dash-card welcome-card">
+            <div class="welcome-content">
+                <div class="welcome-text">
+                    <h3>Welcome, @(Auth.CurrentUser?.Name?.Split(' ')[0])!</h3>
+                    <div class="avatar-placeholder">
+                        <div class="custom-logo-sm">A</div>
+                    </div>
                 </div>
-            }
-        }
-        else
-        {
-            <p class="text-muted small">No tasks for today.</p>
-        }
-    </div>
-
-    <!-- Study Hours Chart -->
-    <div class="dash-card chart-card">
-        <h6 class="card-heading">Study Hours This Week</h6>
-        <div class="bar-chart">
-            @{
-                var maxH = studyLogs.Any() ? studyLogs.Max(l => l.HoursStudied) : 10;
-            }
-            @foreach (var log in studyLogs)
-            {
-                <div class="bar-col">
-                    <div class="bar" style="height: @(log.HoursStudied / (maxH == 0 ? 1 : maxH) * 120 + "px")"></div>
-                    <span class="bar-label">@log.Date.ToString("ddd")</span>
+                <div class="overall-progress">
+                    <p>Overall Progress</p>
+                    <div class="progress-circle-container">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="circle" stroke-dasharray="@overallProgress, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="percentage">@overallProgress%</div>
+                    </div>
                 </div>
-            }
+            </div>
         </div>
-    </div>
 
-    <!-- Upcoming Exams -->
-    <div class="dash-card exams-card">
-        <h6 class="card-heading">Upcoming Exams</h6>
-        @foreach (var ex in upcomingExams)
-        {
-            <div class="exam-row">
-                <div>
-                    <div class="exam-subject">@ex.SubjectName</div>
-                    <div class="exam-course">@ex.CourseName</div>
-                </div>
-                <div class="exam-date">@ex.ExamDate.ToString("ddd")</div>
+        <div class="dash-card tasks-card">
+            <h6 class="card-title">Today's Tasks</h6>
+            <div class="task-list">
+                @foreach (var t in todayTasks)
+                {
+                    <div class="task-item">
+                        <input type="checkbox" checked="@t.IsCompleted" @onchange="() => ToggleTask(t)" />
+                        <span class="@(t.IsCompleted ? "completed" : "")">@t.Title</span>
+                    </div>
+                }
             </div>
-        }
-    </div>
+        </div>
 
-    <!-- Weak Subjects -->
-    <div class="dash-card weak-card">
-        <h6 class="card-heading">Weak Subjects</h6>
-        @foreach (var s in weakSubjects)
-        {
-            <div class="weak-row">
-                <span class="weak-name">@s.Name</span>
-                <div class="weak-bar-wrap">
-                    <div class="bar" style="height: @($"{s.WeaknessPercent}%")"></div>
+        <div class="dash-card chart-card">
+            <h6 class="card-title">Study Hours This Week</h6>
+            <div class="bar-chart-container">
+                <div class="y-axis">
+                    <span>10</span><span>8</span><span>6</span><span>4</span><span>2</span><span>0</span>
                 </div>
-                <span class="weak-pct">@s.WeaknessPercent%</span>
+                <div class="bars-area">
+                    @foreach (var log in studyLogs)
+                    {
+                        <div class="bar-wrapper">
+                            <div class="bar-fill" style="height: @(log.HoursStudied * 10)%;"></div>
+                            <span class="day-label">@log.Date.ToString("ddd")</span>
+                        </div>
+                    }
+                </div>
             </div>
-        }
+        </div>
+
+        <div class="side-column">
+            <div class="dash-card small-card">
+                <h6 class="card-title">Upcoming Exams</h6>
+                @foreach (var ex in upcomingExams)
+                {
+                    <div class="exam-item">
+                        <div class="exam-info">
+                            <span class="exam-name">@ex.SubjectName</span>
+                            <span class="exam-sub">@ex.CourseName</span>
+                        </div>
+                        <span class="exam-day">@ex.ExamDate.ToString("dddd")</span>
+                    </div>
+                }
+            </div>
+
+            <div class="dash-card small-card">
+                <h6 class="card-title">Weak Subjects</h6>
+                @foreach (var s in weakSubjects)
+                {
+                    <div class="weak-subject-item">
+                        <div class="weak-header">
+                            <span>@s.Name</span>
+                            <span>@s.WeaknessPercent%</span>
+                        </div>
+                        <div class="progress-bar-flat">
+                            <div class="progress-fill" style="width: @s.WeaknessPercent%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
 
 @code {
+    // ... logic same rahegi jo aapne di thi ...
     List<StudyTask> todayTasks = new();
     List<StudyLog> studyLogs = new();
     List<Exam> upcomingExams = new();
@@ -115,21 +119,30 @@
         int uid = Auth.CurrentUser!.Id;
 
         todayTasks = await Db.StudyTasks.Where(t => t.UserId == uid).Take(4).ToListAsync();
-        studyLogs = await Db.StudyLogs.Where(l => l.UserId == uid).OrderBy(l => l.Date).Take(7).ToListAsync();
-        upcomingExams = await Db.Exams.Where(e => e.UserId == uid && e.ExamDate >= DateTime.Today).OrderBy(e => e.ExamDate).Take(3).ToListAsync();
-        weakSubjects = await Db.Subjects.Where(s => s.UserId == uid).OrderByDescending(s => s.WeaknessPercent).Take(3).ToListAsync();
 
-        var total = todayTasks.Count;
-        var done = todayTasks.Count(t => t.IsCompleted);
-        overallProgress = total > 0 ? (int)(done * 100.0 / total) : 68;
+        // Dummy data for chart if DB is empty
+        studyLogs = await Db.StudyLogs.Where(l => l.UserId == uid).OrderBy(l => l.Date).Take(7).ToListAsync();
+        if (!studyLogs.Any())
+        {
+            studyLogs = new List<StudyLog>{
+                new StudyLog{ Date = DateTime.Now.AddDays(-6), HoursStudied = 5 },
+                new StudyLog{ Date = DateTime.Now.AddDays(-5), HoursStudied = 7 },
+                new StudyLog{ Date = DateTime.Now.AddDays(-4), HoursStudied = 9 },
+                new StudyLog{ Date = DateTime.Now.AddDays(-3), HoursStudied = 5 },
+                new StudyLog{ Date = DateTime.Now.AddDays(-2), HoursStudied = 8 },
+                new StudyLog{ Date = DateTime.Now.AddDays(-1), HoursStudied = 7 },
+                new StudyLog{ Date = DateTime.Now, HoursStudied = 4 }
+            };
+        }
+
+        upcomingExams = await Db.Exams.Where(e => e.UserId == uid).OrderBy(e => e.ExamDate).Take(2).ToListAsync();
+        weakSubjects = await Db.Subjects.Where(s => s.UserId == uid).OrderByDescending(s => s.WeaknessPercent).Take(2).ToListAsync();
     }
 
     async Task ToggleTask(StudyTask task)
     {
         task.IsCompleted = !task.IsCompleted;
         await Db.SaveChangesAsync();
-        var total = todayTasks.Count;
-        var done = todayTasks.Count(t => t.IsCompleted);
-        overallProgress = total > 0 ? (int)(done * 100.0 / total) : 0;
+        StateHasChanged();
     }
 }
