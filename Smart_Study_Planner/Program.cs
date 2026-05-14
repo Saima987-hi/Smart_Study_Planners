@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Smart_Study_Planner.Models.SmartStudyPlanner.Data;
-using Smart_Study_Planner.Models.SmartStudyPlanner.Services;
 using SmartStudyPlanner.Data;
 using SmartStudyPlanner.Services;
 
