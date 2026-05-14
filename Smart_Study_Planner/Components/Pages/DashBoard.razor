@@ -1,869 +1,135 @@
 ﻿@page "/dashboard"
+@using SmartStudyPlanner.Services
+@using SmartStudyPlanner.Models
+@using SmartStudyPlanner.Data
+@using Microsoft.EntityFrameworkCore
+@inject AuthService Auth
+@inject AppDbContext Db
+@inject NavigationManager Nav
 
-<PageTitle>Smart Study Planner - Dashboard</PageTitle>
+@if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
 
-<div class="app-shell">
-
-    <!-- ═══════════════ SIDEBAR ═══════════════ -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <div class="logo-icon">
-                <svg viewBox="0 0 60 68" width="32" height="36" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="sLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#7EB8E8" />
-                            <stop offset="50%" stop-color="#4A8DC0" />
-                            <stop offset="100%" stop-color="#1E4D78" />
-                        </linearGradient>
-                    </defs>
-                    <text x="50%" y="80%" text-anchor="middle" dominant-baseline="auto"
-                          font-family="Georgia, serif" font-size="62" font-weight="bold"
-                          fill="url(#sLogoGrad)">A</text>
+<div class="dashboard-grid">
+    <!-- Welcome + Progress Card -->
+    <div class="dash-card welcome-card">
+        <div class="welcome-info">
+            <div class="user-avatar-lg">
+                <span>@(Auth.CurrentUser?.Name?.Substring(0, 1).ToUpper())</span>
+            </div>
+            <div>
+                <p class="welcome-label">Welcome,</p>
+                <h3 class="welcome-name">@Auth.CurrentUser?.Name!</h3>
+            </div>
+        </div>
+        <div class="progress-circle-wrap">
+            <p class="progress-label">Overall Progress</p>
+            <div class="progress-circle">
+                <svg viewBox="0 0 100 100" width="100" height="100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e0e8f5" stroke-width="10" />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#2d5fa0" stroke-width="10"
+                            stroke-dasharray="@(2.51 * overallProgress) @(251 - 2.51 * overallProgress)"
+                            stroke-dashoffset="62.75" stroke-linecap="round" />
                 </svg>
-            </div>
-            <div class="logo-text">
-                <span class="logo-line1">Smart Study</span>
-                <span class="logo-line2">Planner</span>
+                <span class="progress-pct">@overallProgress%</span>
             </div>
         </div>
+    </div>
 
-        <nav class="sidebar-nav">
-            <a href="/dashboard" class="nav-item active">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                    </svg>
-                </span>
-                Dashboard
-            </a>
-            <a href="/schedule" class="nav-item">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                </span>
-                Schedule
-            </a>
-            <a href="/tasks" class="nav-item">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 11 12 14 22 4" />
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                    </svg>
-                </span>
-                Tasks
-            </a>
-            <a href="/pomodoro" class="nav-item">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <circle cx="12" cy="12" r="9" />
-                        <polyline points="12 7 12 12 15 15" />
-                    </svg>
-                </span>
-                Pomodoro
-            </a>
-            <a href="/analytics" class="nav-item">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <line x1="18" y1="20" x2="18" y2="10" />
-                        <line x1="12" y1="20" x2="12" y2="4" />
-                        <line x1="6" y1="20" x2="6" y2="14" />
-                    </svg>
-                </span>
-                Analytics
-            </a>
-            <a href="/settings" class="nav-item">
-                <span class="nav-icon">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                </span>
-                Settings
-            </a>
-        </nav>
-    </aside>
-
-    <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
-    <main class="main-content">
-
-        <!-- Top bar -->
-        <header class="topbar">
-            <h1 class="page-title">Dashboard</h1>
-            <div class="topbar-actions">
-                <button class="icon-btn bell-btn" title="Notifications">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                    </svg>
-                </button>
-                <button class="avatar-btn" title="Profile">
-                    <svg viewBox="0 0 60 68" width="20" height="22" xmlns="http://www.w3.org/2000/svg">
-                        <text x="50%" y="80%" text-anchor="middle" dominant-baseline="auto"
-                              font-family="Georgia, serif" font-size="58" font-weight="bold"
-                              fill="#fff">A</text>
-                    </svg>
-                </button>
-            </div>
-        </header>
-
-        <!-- Dashboard grid -->
-        <div class="dash-grid">
-
-            <!-- ── Welcome Card ── -->
-            <div class="card card-welcome">
-                <div class="welcome-left">
-                    <h2 class="welcome-title">Welcome, Alex!</h2>
-                    <div class="user-avatar-lg">
-                        <svg viewBox="0 0 60 68" width="48" height="54" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="avGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#7EB8E8" />
-                                    <stop offset="50%" stop-color="#4A8DC0" />
-                                    <stop offset="100%" stop-color="#1E4D78" />
-                                </linearGradient>
-                            </defs>
-                            <text x="50%" y="80%" text-anchor="middle" dominant-baseline="auto"
-                                  font-family="Georgia, serif" font-size="62" font-weight="bold"
-                                  fill="url(#avGrad)">A</text>
-                        </svg>
-                    </div>
+    <!-- Today's Tasks -->
+    <div class="dash-card tasks-card">
+        <h6 class="card-heading">Today's Tasks</h6>
+        @if (todayTasks.Any())
+        {
+            @foreach (var t in todayTasks)
+            {
+                <div class="task-item">
+                    <input type="checkbox" checked="@t.IsCompleted" @onchange="() => ToggleTask(t)" />
+                    <span class="@(t.IsCompleted ? "task-done" : "")">@t.Title</span>
                 </div>
-                <div class="welcome-right">
-                    <p class="progress-label">Overall Progress</p>
-                    <div class="donut-wrap">
-                        <svg class="donut" viewBox="0 0 120 120" width="120" height="120">
-                            <circle class="donut-track" cx="60" cy="60" r="48"
-                                    fill="none" stroke="#DDE8F4" stroke-width="10" />
-                            <circle class="donut-fill" cx="60" cy="60" r="48"
-                                    fill="none" stroke="#1E3F6E" stroke-width="10"
-                                    stroke-linecap="round"
-                                    stroke-dasharray="@(GetDash(68))"
-                                    transform="rotate(-90 60 60)" />
-                            <text x="60" y="65" text-anchor="middle"
-                                  font-family="'Segoe UI', sans-serif" font-size="20" font-weight="700"
-                                  fill="#1E3F6E">68%</text>
-                        </svg>
-                    </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted small">No tasks for today.</p>
+        }
+    </div>
+
+    <!-- Study Hours Chart -->
+    <div class="dash-card chart-card">
+        <h6 class="card-heading">Study Hours This Week</h6>
+        <div class="bar-chart">
+            @{
+                var maxH = studyLogs.Any() ? studyLogs.Max(l => l.HoursStudied) : 10;
+            }
+            @foreach (var log in studyLogs)
+            {
+                <div class="bar-col">
+                    <div class="bar" style="height: @(log.HoursStudied / (maxH == 0 ? 1 : maxH) * 120 + "px")"></div>
+                    <span class="bar-label">@log.Date.ToString("ddd")</span>
                 </div>
-            </div>
-
-            <!-- ── Today's Tasks ── -->
-            <div class="card card-tasks">
-                <h3 class="card-title">Today's Tasks</h3>
-                <ul class="task-list">
-                    @foreach (var t in tasks)
-                    {
-                        <li class="task-item" @onclick="@(() => t.Done = !t.Done)">
-                            <span class="checkbox @(t.Done ? "checked" : "")">
-                                @if (t.Done)
-                                {
-                                    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="1.5,6 4.5,9 10.5,3" />
-                                    </svg>
-                                }
-                            </span>
-                            <span class="task-text @(t.Done ? "done-text" : "")">@t.Title</span>
-                        </li>
-                    }
-                </ul>
-            </div>
-
-            <!-- ── Study Hours Chart ── -->
-            <div class="card card-chart">
-                <h3 class="card-title">Study Hours This Week</h3>
-                <div class="chart-wrap">
-                    <div class="chart-y-axis">
-                        @foreach (var v in new[] { 10, 8, 6, 4, 2, 0 })
-                        {
-                            <span>@v</span>
-                        }
-                    </div>
-                    <div class="chart-bars-area">
-                        <div class="chart-grid-lines">
-                            @for (int i = 0; i <= 5; i++)
-                            {
-                                <div class="grid-line"></div>
-                            }
-                        </div>
-                        <div class="chart-bars">
-                            @foreach (var d in weekData)
-                            {
-                                <div class="bar-col">
-                                    <div class="bar" style="height: @(d.Hours / 10.0 * 100)%"></div>
-                                    <span class="bar-label">@d.Day</span>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── Upcoming Exams ── -->
-            <div class="card card-exams">
-                <h3 class="card-title">Upcoming Exams</h3>
-                <ul class="exam-list">
-                    @foreach (var e in exams)
-                    {
-                        <li class="exam-item">
-                            <div class="exam-info">
-                                <span class="exam-name">@e.Subject</span>
-                                <span class="exam-sub">@e.Course</span>
-                            </div>
-                            <span class="exam-date">@e.Date</span>
-                        </li>
-                    }
-                </ul>
-            </div>
-
-            <!-- ── Weak Subjects ── -->
-            <div class="card card-weak">
-                <h3 class="card-title">Weak Subjects</h3>
-                <ul class="weak-list">
-                    @foreach (var s in weakSubjects)
-                    {
-                        <li class="weak-item">
-                            <div class="weak-header">
-                                <span class="weak-name">@s.Subject</span>
-                                <span class="weak-pct">@s.Percent%</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-fill" style="width: @s.Percent%"></div>
-                            </div>
-                        </li>
-                    }
-                </ul>
-            </div>
-
+            }
         </div>
-    </main>
+    </div>
+
+    <!-- Upcoming Exams -->
+    <div class="dash-card exams-card">
+        <h6 class="card-heading">Upcoming Exams</h6>
+        @foreach (var ex in upcomingExams)
+        {
+            <div class="exam-row">
+                <div>
+                    <div class="exam-subject">@ex.SubjectName</div>
+                    <div class="exam-course">@ex.CourseName</div>
+                </div>
+                <div class="exam-date">@ex.ExamDate.ToString("ddd")</div>
+            </div>
+        }
+    </div>
+
+    <!-- Weak Subjects -->
+    <div class="dash-card weak-card">
+        <h6 class="card-heading">Weak Subjects</h6>
+        @foreach (var s in weakSubjects)
+        {
+            <div class="weak-row">
+                <span class="weak-name">@s.Name</span>
+                <div class="weak-bar-wrap">
+                    <div class="weak-bar" style="width: @s.WeaknessPercent%"></div>
+                </div>
+                <span class="weak-pct">@s.WeaknessPercent%</span>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
-    // ── Donut helper ──────────────────────────────────────
-    private string GetDash(double pct)
+    List<StudyTask> todayTasks = new();
+    List<StudyLog> studyLogs = new();
+    List<Exam> upcomingExams = new();
+    List<Subject> weakSubjects = new();
+    int overallProgress = 68;
+
+    protected override async Task OnInitializedAsync()
     {
-        double circ = 2 * Math.PI * 48;
-        double fill = circ * pct / 100;
-        return $"{fill:F1} {circ:F1}";
+        if (!Auth.IsLoggedIn) return;
+        int uid = Auth.CurrentUser!.Id;
+
+        todayTasks = await Db.StudyTasks.Where(t => t.UserId == uid).Take(4).ToListAsync();
+        studyLogs = await Db.StudyLogs.Where(l => l.UserId == uid).OrderBy(l => l.Date).Take(7).ToListAsync();
+        upcomingExams = await Db.Exams.Where(e => e.UserId == uid && e.ExamDate >= DateTime.Today).OrderBy(e => e.ExamDate).Take(3).ToListAsync();
+        weakSubjects = await Db.Subjects.Where(s => s.UserId == uid).OrderByDescending(s => s.WeaknessPercent).Take(3).ToListAsync();
+
+        var total = todayTasks.Count;
+        var done = todayTasks.Count(t => t.IsCompleted);
+        overallProgress = total > 0 ? (int)(done * 100.0 / total) : 68;
     }
 
-    // ── Tasks ─────────────────────────────────────────────
-    private List<TaskItem> tasks = new()
+    async Task ToggleTask(StudyTask task)
     {
-        new() { Title = "Linear lineas tasks",        Done = true  },
-        new() { Title = "Planuttting day checklist",  Done = true  },
-        new() { Title = "Calorer study ontilight",    Done = false },
-        new() { Title = "Scract predite tasklist",    Done = false },
-    };
-
-    // ── Week chart data ───────────────────────────────────
-    private List<DayData> weekData = new()
-    {
-        new() { Day = "Mon", Hours = 5.5 },
-        new() { Day = "Tue", Hours = 7.5 },
-        new() { Day = "Wed", Hours = 9.0 },
-        new() { Day = "Thu", Hours = 5.5 },
-        new() { Day = "Fri", Hours = 8.2 },
-        new() { Day = "Sat", Hours = 7.0 },
-        new() { Day = "Sun", Hours = 4.5 },
-    };
-
-    // ── Exams ─────────────────────────────────────────────
-    private List<ExamItem> exams = new()
-    {
-        new() { Subject = "OOP",        Course = "Comper 2023", Date = "Tuesday"    },
-        new() { Subject = "Networking", Course = "Comper 2023", Date = "12 Monday"  },
-    };
-
-    // ── Weak subjects ─────────────────────────────────────
-    private List<WeakSubject> weakSubjects = new()
-    {
-        new() { Subject = "Math",    Percent = 68 },
-        new() { Subject = "Physics", Percent = 70 },
-    };
-
-    // ── Models ────────────────────────────────────────────
-    public class TaskItem { public string Title { get; set; } = ""; public bool Done { get; set; } }
-    public class DayData { public string Day { get; set; } = ""; public double Hours { get; set; } }
-    public class ExamItem { public string Subject { get; set; } = ""; public string Course { get; set; } = ""; public string Date { get; set; } = ""; }
-    public class WeakSubject { public string Subject { get; set; } = ""; public int Percent { get; set; } }
+        task.IsCompleted = !task.IsCompleted;
+        await Db.SaveChangesAsync();
+        var total = todayTasks.Count;
+        var done = todayTasks.Count(t => t.IsCompleted);
+        overallProgress = total > 0 ? (int)(done * 100.0 / total) : 0;
+    }
 }
-
-<style>
-    /* ═══════════════════════════════════════════════════════
-       CSS VARIABLES  (shared with Login.razor)
-    ═══════════════════════════════════════════════════════ */
-    :root {
-        --c-blue-dark: #1E3F6E;
-        --c-blue-mid: #2D6096;
-        --c-blue-light: #5B9BD5;
-        --c-sidebar-bg: #FFFFFF;
-        --c-main-bg: #D6E5F3;
-        --c-card-bg: #FFFFFF;
-        --c-border: #D5E2EE;
-        --c-text: #1C3148;
-        --c-text-sub: #6A88A4;
-        --c-active-bg: #E6EEF8;
-        --c-active-text: #1E3F6E;
-        --c-bar: #8FBCE0;
-        --c-progress-fill: #1E3F6E;
-        --c-progress-bg: #D8E8F4;
-        --radius: 14px;
-        --shadow: 0 2px 12px rgba(20,50,90,.08);
-        --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    }
-
-    *, *::before, *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    a {
-        text-decoration: none;
-        color: inherit;
-    }
-
-    button {
-        cursor: pointer;
-        font-family: var(--font);
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       APP SHELL
-    ═══════════════════════════════════════════════════════ */
-    .app-shell {
-        display: flex;
-        min-height: 100vh;
-        font-family: var(--font);
-        background: var(--c-main-bg);
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       SIDEBAR
-    ═══════════════════════════════════════════════════════ */
-    .sidebar {
-        width: 220px;
-        flex-shrink: 0;
-        background: var(--c-sidebar-bg);
-        display: flex;
-        flex-direction: column;
-        padding: 1.5rem 0 2rem;
-        box-shadow: 2px 0 10px rgba(20,50,90,.06);
-    }
-
-    /* Logo row */
-    .sidebar-logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 0 1.25rem 1.8rem;
-    }
-
-    .logo-icon {
-        width: 38px;
-        height: 38px;
-        background: #EAF2FB;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .logo-text {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.25;
-    }
-
-    .logo-line1 {
-        font-size: .8rem;
-        font-weight: 700;
-        color: var(--c-blue-dark);
-    }
-
-    .logo-line2 {
-        font-size: .8rem;
-        font-weight: 700;
-        color: var(--c-blue-dark);
-    }
-
-    /* Nav items */
-    .sidebar-nav {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        padding: 0 .75rem;
-    }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-size: .875rem;
-        font-weight: 500;
-        color: var(--c-text-sub);
-        transition: background .15s, color .15s;
-    }
-
-        .nav-item:hover {
-            background: #F0F5FB;
-            color: var(--c-blue-dark);
-        }
-
-        .nav-item.active {
-            background: var(--c-active-bg);
-            color: var(--c-active-text);
-            font-weight: 600;
-        }
-
-    .nav-icon {
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       MAIN CONTENT
-    ═══════════════════════════════════════════════════════ */
-    .main-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        padding: 1.5rem 1.75rem;
-    }
-
-    /* Top bar */
-    .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.4rem;
-    }
-
-    .page-title {
-        font-size: 1.45rem;
-        font-weight: 700;
-        color: var(--c-text);
-    }
-
-    .topbar-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .icon-btn {
-        width: 40px;
-        height: 40px;
-        border: none;
-        background: rgba(255,255,255,.7);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--c-text);
-        transition: background .15s;
-    }
-
-        .icon-btn:hover {
-            background: #fff;
-        }
-
-    .avatar-btn {
-        width: 40px;
-        height: 40px;
-        border: none;
-        background: var(--c-blue-dark);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background .15s;
-    }
-
-        .avatar-btn:hover {
-            background: var(--c-blue-mid);
-        }
-
-    /* ═══════════════════════════════════════════════════════
-       DASHBOARD GRID
-    ═══════════════════════════════════════════════════════ */
-    .dash-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1.05fr;
-        grid-template-rows: auto auto;
-        gap: 1rem;
-    }
-
-    /* Card base */
-    .card {
-        background: var(--c-card-bg);
-        border-radius: var(--radius);
-        padding: 1.4rem 1.5rem;
-        box-shadow: var(--shadow);
-    }
-
-    .card-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--c-text);
-        margin-bottom: 1rem;
-    }
-
-    /* ── Welcome card ── */
-    .card-welcome {
-        grid-column: 1 / 2;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .welcome-left {
-        display: flex;
-        flex-direction: column;
-        gap: .75rem;
-    }
-
-    .welcome-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--c-text);
-    }
-
-    .user-avatar-lg {
-        width: 72px;
-        height: 72px;
-        background: #DDE9F6;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .welcome-right {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: .4rem;
-    }
-
-    .progress-label {
-        font-size: .78rem;
-        color: var(--c-text-sub);
-        font-weight: 500;
-    }
-
-    .donut {
-        display: block;
-    }
-
-    .donut-fill {
-        transition: stroke-dasharray .6s ease;
-    }
-
-    /* ── Today's Tasks ── */
-    .card-tasks {
-        grid-column: 2 / 4;
-    }
-
-    .task-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: .7rem;
-    }
-
-    .task-item {
-        display: flex;
-        align-items: center;
-        gap: .65rem;
-        cursor: pointer;
-        user-select: none;
-    }
-
-    .checkbox {
-        width: 18px;
-        height: 18px;
-        border: 1.5px solid #B0C4D8;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: background .15s, border-color .15s;
-        background: #fff;
-    }
-
-        .checkbox.checked {
-            background: var(--c-blue-dark);
-            border-color: var(--c-blue-dark);
-        }
-
-    .task-text {
-        font-size: .88rem;
-        color: var(--c-text);
-        transition: color .15s;
-    }
-
-    .done-text {
-        color: var(--c-text-sub);
-        text-decoration: line-through;
-    }
-
-    /* ── Study Hours Chart ── */
-    .card-chart {
-        grid-column: 1 / 3;
-    }
-
-    .chart-wrap {
-        display: flex;
-        height: 200px;
-        gap: .5rem;
-        margin-top: .5rem;
-    }
-
-    .chart-y-axis {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: flex-end;
-        padding-bottom: 22px;
-        min-width: 24px;
-    }
-
-        .chart-y-axis span {
-            font-size: .7rem;
-            color: var(--c-text-sub);
-        }
-
-    .chart-bars-area {
-        flex: 1;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .chart-grid-lines {
-        position: absolute;
-        inset: 0;
-        bottom: 22px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        pointer-events: none;
-    }
-
-    .grid-line {
-        width: 100%;
-        height: 1px;
-        background: #E0EAFA;
-    }
-
-    .chart-bars {
-        flex: 1;
-        display: flex;
-        align-items: flex-end;
-        gap: 6px;
-        padding-bottom: 22px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .bar-col {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 4px;
-        height: 100%;
-    }
-
-    .bar {
-        width: 100%;
-        max-width: 44px;
-        background: var(--c-bar);
-        border-radius: 5px 5px 0 0;
-        min-height: 4px;
-        transition: background .2s;
-    }
-
-        .bar:hover {
-            background: var(--c-blue-mid);
-        }
-
-    .bar-label {
-        font-size: .7rem;
-        color: var(--c-text-sub);
-        white-space: nowrap;
-    }
-
-    /* ── Upcoming Exams ── */
-    .card-exams {
-        grid-column: 3 / 4;
-        grid-row: 2 / 3;
-    }
-
-    .exam-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: .9rem;
-    }
-
-    .exam-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding-bottom: .9rem;
-        border-bottom: 1px solid #EEF4FA;
-    }
-
-        .exam-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-    .exam-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .exam-name {
-        font-size: .9rem;
-        font-weight: 600;
-        color: var(--c-text);
-    }
-
-    .exam-sub {
-        font-size: .72rem;
-        color: var(--c-text-sub);
-    }
-
-    .exam-date {
-        font-size: .8rem;
-        color: var(--c-text);
-        font-weight: 500;
-        white-space: nowrap;
-    }
-
-    /* ── Weak Subjects ── */
-    .card-weak {
-        grid-column: 3 / 4;
-        grid-row: 3 / 4;
-    }
-
-    .weak-list {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .weak-item {
-        display: flex;
-        flex-direction: column;
-        gap: .4rem;
-    }
-
-    .weak-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .weak-name {
-        font-size: .88rem;
-        font-weight: 500;
-        color: var(--c-text);
-    }
-
-    .weak-pct {
-        font-size: .82rem;
-        color: var(--c-text);
-        font-weight: 600;
-    }
-
-    .progress-track {
-        height: 7px;
-        background: var(--c-progress-bg);
-        border-radius: 99px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: var(--c-progress-fill);
-        border-radius: 99px;
-        transition: width .6s ease;
-    }
-
-    /* ═══════════════════════════════════════════════════════
-       RESPONSIVE
-    ═══════════════════════════════════════════════════════ */
-    @@media (max-width: 900px) {
-        .dash-grid {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .card-welcome {
-            grid-column: 1 / 2;
-        }
-
-        .card-tasks {
-            grid-column: 2 / 3;
-        }
-
-        .card-chart {
-            grid-column: 1 / 3;
-        }
-
-        .card-exams {
-            grid-column: 1 / 2;
-        }
-
-        .card-weak {
-            grid-column: 2 / 3;
-        }
-    }
-
-    @@media (max-width: 600px) {
-        .app-shell {
-            flex-direction: column;
-        }
-
-        .sidebar {
-            width: 100%;
-            flex-direction: row;
-            padding: 1rem;
-        }
-
-        .sidebar-nav {
-            flex-direction: row;
-            overflow-x: auto;
-        }
-
-        .dash-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .card-welcome, .card-tasks, .card-chart,
-        .card-exams, .card-weak {
-            grid-column: 1;
-        }
-    }
-</style>
