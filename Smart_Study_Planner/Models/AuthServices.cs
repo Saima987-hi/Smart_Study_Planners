@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartStudyPlanner.Data;
 using SmartStudyPlanner.Models;
 
-namespace SmartStudyPlanner.Services
+namespace SmartStudyPlanner.Service
 {
     public class AuthService
     {
