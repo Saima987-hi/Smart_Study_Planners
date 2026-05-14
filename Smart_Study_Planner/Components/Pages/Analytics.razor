@@ -96,3 +96,48 @@
         </div>
     </div>
 </div>
+@code {
+    // Ye variables markup mein use ho rahe hain, inhein yahan define karna lazmi hai
+    private record SubjectStat(string Name, int Quiz, int Assignment);
+
+    private List<SubjectStat> subjects = new()
+    {
+        new("Math", 20, 28),
+        new("OOP", 40, 50),
+        new("Networking", 23, 51),
+        new("Physics", 17, 21)
+    };
+
+    private double totalStudyHours = 6.0;
+    private int consistencyPct = 60;
+    private int tasksCompleted = 13;
+    private int weakAreas = 11;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Safety check for Login
+        if (!Auth.IsLoggedIn) return;
+
+        try
+        {
+            int uid = Auth.CurrentUser!.Id;
+
+            // Database se real-time data fetch karna
+            var logs = await Db.StudyLogs.Where(l => l.UserId == uid).ToListAsync();
+
+            if (logs.Any())
+            {
+                totalStudyHours = Math.Round(logs.Sum(l => l.HoursStudied), 1);
+                consistencyPct = (int)(logs.Average(l => l.HoursStudied) / 10 * 100);
+            }
+
+            tasksCompleted = await Db.StudyTasks.CountAsync(t => t.UserId == uid && t.IsCompleted);
+            weakAreas = await Db.Subjects.CountAsync(s => s.UserId == uid && s.WeaknessPercent > 60);
+        }
+        catch (Exception ex)
+        {
+            // Error handling agar DB khali ho
+            Console.WriteLine($"Error loading analytics: {ex.Message}");
+        }
+    }
+}
