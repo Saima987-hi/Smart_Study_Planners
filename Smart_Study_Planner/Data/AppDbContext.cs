@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SmartStudyPlanner.Models;
+using Smart_Study_Planner.Models;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 

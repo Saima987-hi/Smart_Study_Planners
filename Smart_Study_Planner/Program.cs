@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using SmartStudyPlanner.Data;
-using SmartStudyPlanner.Services;
+using Smart_Study_Planner.Data;
+using Smart_Study_Planner.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
