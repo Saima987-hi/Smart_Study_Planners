@@ -1,168 +1,87 @@
-﻿@page "/pomodoro"
-@using Smart_Study_Planner.Services
-@using Smart_Study_Planner.Models
-@using Smart_Study_Planner.Data
-@using Microsoft.EntityFrameworkCore
-@inject AuthService Auth
-@inject AppDbContext Db
-@inject NavigationManager Nav
-@implements IDisposable
-
-@if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
-
-<div class="pomodoro-layout">
-    <!-- Left: Timer -->
-    <div class="dash-card pomodoro-timer-card">
-        <h6 class="card-heading">Pomodoro Timer</h6>
-        <div class="timer-circle-wrap">
-            <div class="timer-ring">
-                <svg viewBox="0 0 200 200" width="200" height="200">
-                    <circle cx="100" cy="100" r="85" fill="none" stroke="#e0e8f5" stroke-width="10" />
-                    <circle cx="100" cy="100" r="85" fill="none" stroke="#2d5fa0" stroke-width="10"
-                            stroke-dasharray="@(5.34 * progressPct) @(534 - 5.34 * progressPct)"
-                            stroke-dashoffset="133.5" stroke-linecap="round"
-                            style="transition: stroke-dasharray 1s linear;" />
-                </svg>
-                <span class="timer-display">@FormatTime(secondsLeft)</span>
-            </div>
-        </div>
-        <div class="timer-controls">
-            <button class="timer-btn" @onclick="StartStop">
-                <i class="bi @(isRunning ? "bi-pause-fill" : "bi-play-fill")"></i>
-            </button>
-            <button class="timer-btn" @onclick="Reset">
-                <i class="bi bi-arrow-clockwise"></i>
-            </button>
-        </div>
-        <p class="session-label">Focus Session @currentSession of 4</p>
-
-        <div class="xp-strip mt-3">
-            <i class="bi bi-fire text-warning me-1"></i>
-            <span>XP Points: <strong>@(Auth.CurrentUser?.XpPoints ?? 1250)</strong></span>
-            <span class="ms-3">🔥 @(Auth.CurrentUser?.StreakDays ?? 7) Day Streak</span>
-        </div>
+﻿<div class="pomodoro-container">
+    <div class="pomodoro-header">
+        <h2 class="page-title">Smart Study Pomodoro</h2>
     </div>
 
-    <!-- Right: Performance Tracking -->
-    <div class="dash-card pomodoro-track-card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="card-heading mb-0">Performance Tracking</h6>
-            <select class="form-select form-select-sm ssp-input" style="width:130px">
-                <option>Past week</option>
-                <option>Past month</option>
-            </select>
-        </div>
-
-        <p class="track-sublabel">Study Consistency</p>
-        <div class="line-chart-wrap mb-4">
-            <svg viewBox="0 0 400 100" width="100%" height="100">
-                <polyline fill="none" stroke="#2d5fa0" stroke-width="2"
-                          points="0,80 57,60 114,40 171,55 228,30 285,45 342,20 400,10" />
-                <polyline fill="none" stroke="#a0b8d8" stroke-width="2"
-                          points="0,60 57,70 114,50 171,65 228,40 285,55 342,35 400,25" />
-                <polyline fill="none" stroke="#7090b0" stroke-width="2"
-                          points="0,90 57,75 114,60 171,70 228,50 285,60 342,45 400,30" />
-            </svg>
-            <div class="chart-days">
-                @foreach (var d in new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" })
-                {
-                    <span>@d</span>
-                }
-            </div>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-6">
-                <p class="track-sublabel">Quiz Marks</p>
-                <div class="mini-bar-chart">
-                    @foreach (var val in new[] { 30, 50, 40, 60, 45, 55, 70 })
-                    {
-                        <div class="mini-bar" style="height:@(val * 0.7+"px")"></div>
-                    }
-                </div>
-                <div class="chart-days">
-                    @foreach (var d in new[] { "M", "T", "W", "T", "F", "S", "S" })
-                    {
-                        <span>@d</span>
-                    }
+    <div class="pomodoro-grid">
+        <div class="glass-card timer-main-card">
+            <h5 class="card-title">Pomodoro Timer</h5>
+            <div class="timer-visual-area">
+                <div class="timer-circle">
+                    <svg viewBox="0 0 200 200">
+                        <circle class="timer-bg" cx="100" cy="100" r="85" />
+                        <circle class="timer-progress" cx="100" cy="100" r="85"
+                                style="stroke-dasharray: 534; stroke-dashoffset: @(534 - (5.34 * progressPct));" />
+                    </svg>
+                    <div class="timer-text">
+                        <span class="time-main">@FormatTime(secondsLeft)</span>
+                    </div>
                 </div>
             </div>
-            <div class="col-6">
-                <p class="track-sublabel">Assignment Completion</p>
-                <div class="mini-bar-chart">
-                    @foreach (var val in new[] { 60, 70, 50, 80, 65, 75, 90 })
-                    {
-                        <div class="mini-bar" style="height:@(val * 0.7+"px")"></div>
-                    }
+
+            <div class="timer-controls-row">
+                <button class="ctrl-btn play-pause" @onclick="StartStop">
+                    <i class="bi @(isRunning ? "bi-pause-fill" : "bi-play-fill")"></i>
+                </button>
+                <button class="ctrl-btn reset" @onclick="Reset">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+
+            <p class="session-info">Focus Session @currentSession of 4</p>
+        </div>
+
+        <div class="performance-section">
+            <div class="glass-card performance-card">
+                <div class="card-header-flex">
+                    <h5 class="card-title">Performance Tracking</h5>
+                    <select class="period-select">
+                        <option>Past week</option>
+                    </select>
                 </div>
-                <div class="chart-days">
-                    @foreach (var d in new[] { "M", "T", "W", "T", "F", "S", "S" })
-                    {
-                        <span>@d</span>
-                    }
+
+                <div class="chart-section">
+                    <label class="chart-label">Study Consistency</label>
+                    <div class="line-chart-container">
+                        <svg viewBox="0 0 400 120" class="main-line-chart">
+                            <path class="line-blue" d="M0,100 Q50,80 100,90 T200,60 T300,80 T400,20" fill="none" />
+                            <path class="line-light" d="M0,110 Q60,95 120,105 T240,85 T400,50" fill="none" />
+                        </svg>
+                        <div class="chart-x-axis">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-charts-row">
+                    <div class="mini-chart-box">
+                        <label class="chart-label">Quiz Marks</label>
+                        <div class="bar-chart-flex">
+                            @foreach (var val in new[] { 40, 60, 35, 75, 50, 65, 85 })
+                            {
+                                <div class="bar-wrap"><div class="bar-fill" style="height:@(val)%"></div></div>
+                            }
+                        </div>
+                    </div>
+                    <div class="mini-chart-box">
+                        <label class="chart-label">Assignment Completion</label>
+                        <div class="bar-chart-flex">
+                            @foreach (var val in new[] { 70, 85, 60, 95, 75, 80, 100 })
+                            {
+                                <div class="bar-wrap"><div class="bar-fill" style="height:@(val)%"></div></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gamification-badge">
+                <h6 class="badge-title">Gamification</h6>
+                <div class="badge-stats">
+                    <span>XP points: <strong>@(Auth.CurrentUser?.XpPoints ?? 1250)</strong></span>
+                    <span class="streak-label">🔥 @(Auth.CurrentUser?.StreakDays ?? 7) Day Streak</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@code {
-    System.Threading.Timer? timer;
-    int totalSeconds = 25 * 60;
-    int secondsLeft = 25 * 60;
-    bool isRunning = false;
-    int currentSession = 1;
-    double progressPct => 100.0 - (secondsLeft * 100.0 / totalSeconds);
-
-    string FormatTime(int s) => $"{s / 60:D2}:{s % 60:D2}";
-
-    void StartStop()
-    {
-        if (isRunning)
-        {
-            timer?.Dispose(); timer = null;
-            isRunning = false;
-        }
-        else
-        {
-            isRunning = true;
-            timer = new System.Threading.Timer(async _ =>
-            {
-                if (secondsLeft > 0)
-                {
-                    secondsLeft--;
-                    await InvokeAsync(StateHasChanged);
-                }
-                else
-                {
-                    isRunning = false;
-                    timer?.Dispose(); timer = null;
-                    if (currentSession < 4) currentSession++;
-                    else currentSession = 1;
-                    secondsLeft = totalSeconds;
-                    await SaveSession();
-                    await InvokeAsync(StateHasChanged);
-                }
-            }, null, 0, 1000);
-        }
-    }
-
-    void Reset()
-    {
-        timer?.Dispose(); timer = null;
-        isRunning = false;
-        secondsLeft = totalSeconds;
-    }
-
-    async Task SaveSession()
-    {
-        if (!Auth.IsLoggedIn) return;
-        var session = new PomodoroSession { UserId = Auth.CurrentUser!.Id, DurationMinutes = 25, IsCompleted = true };
-        Db.PomodoroSessions.Add(session);
-        var user = await Db.Users.FindAsync(Auth.CurrentUser.Id);
-        if (user != null) { user.XpPoints += 50; user.StreakDays += 0; }
-        await Db.SaveChangesAsync();
-    }
-
-    public void Dispose() { timer?.Dispose(); }
-}
