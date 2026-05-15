@@ -1,10 +1,4 @@
-﻿namespace Smart_Study_Planner.Components.Pages
-{
-    public class Pomodoro
-    {
-    }
-}
-.pomodoro-container {
+﻿.pomodoro-container {
     padding: 30px;
     background: #f0f5ff;
     min-height: 100vh;
