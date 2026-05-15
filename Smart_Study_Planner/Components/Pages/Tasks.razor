@@ -9,169 +9,229 @@
 
 @if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
 
-<div class="settings-page">
-    <div class="settings-card">
+<div class="task-page-wrapper">
 
-        <!-- Profile Section -->
-        <div class="settings-section">
-            <div class="settings-profile-row">
-                <div class="settings-avatar">@(Auth.CurrentUser?.Name?.Substring(0, 1).ToUpper())</div>
-                <div>
-                    <div class="fw-semibold fs-5">@Auth.CurrentUser?.Name</div>
-                    <div class="text-muted small">@Auth.CurrentUser?.Email</div>
-                </div>
-                <button class="btn btn-sm btn-outline-primary ms-auto">
-                    <i class="bi bi-pencil me-1"></i>Edit
-                </button>
-            </div>
-            <hr class="ssp-divider" />
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="settings-link-text">ASP.NET Identity</span>
-                <a href="#" class="settings-link-btn">Settings <i class="bi bi-chevron-right"></i></a>
-            </div>
+    <!-- Header -->
+    <div class="task-header">
+        <h2 class="task-page-title">Task Manager</h2>
+        <div class="task-stats-box">
+            <div class="stat-row"><span>Summary</span><span class="stat-num">@tasks.Count</span></div>
+            <div class="stat-row"><span>Completed</span><span class="stat-num">@tasks.Count(t => t.IsCompleted)</span></div>
         </div>
+    </div>
 
-        <!-- Smart Scheduler Preferences -->
-        <div class="settings-section">
-            <h6 class="settings-section-title">Smart Scheduler Preferences</h6>
-            <div class="settings-toggle-row">
-                <span>Difficult subjects get more time</span>
-                <div class="toggle-switch @(smartScheduler ? "on" : "")" @onclick="() => { smartScheduler = !smartScheduler; SaveSettings(); }">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-            <div class="settings-toggle-row">
-                <span>Near exams high priority</span>
-                <div class="toggle-switch @(nearExam ? "on" : "")" @onclick="() => { nearExam = !nearExam; SaveSettings(); }">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
+    <!-- Toolbar -->
+    <div class="task-toolbar">
+        <button class="btn-add-task" @onclick="OpenAddModal">
+            <i class="bi bi-plus-lg"></i> Add Task
+        </button>
+        <div class="filter-group">
+            <select class="filter-select" @bind="filterPriority">
+                <option value="">Priority</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+            <select class="filter-select" @bind="filterStatus">
+                <option value="">Status</option>
+                <option value="Completed">Completed</option>
+                <option value="Pending">Pending</option>
+                <option value="Scheduled">Scheduled</option>
+            </select>
         </div>
+    </div>
 
-        <!-- Appearance -->
-        <div class="settings-section">
-            <h6 class="settings-section-title">Appearance</h6>
-            <div class="theme-toggle-row">
-                <span>Light Theme</span>
-                <div class="theme-switch @(darkTheme ? "dark" : "light")" @onclick="() => { darkTheme = !darkTheme; SaveSettings(); }">
-                    <div class="theme-knob"></div>
-                </div>
-                <span>Dark Theme</span>
-            </div>
-        </div>
-
-        <!-- Notifications -->
-        <div class="settings-section">
-            <h6 class="settings-section-title">Notifications</h6>
-            <div class="settings-toggle-row">
-                <span>Study time</span>
-                <div class="toggle-switch @(notifyStudy ? "on" : "")" @onclick="() => { notifyStudy = !notifyStudy; SaveSettings(); }">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-            <div class="settings-toggle-row">
-                <span>Email reminders</span>
-                <div class="toggle-switch @(notifyEmail ? "on" : "")" @onclick="() => { notifyEmail = !notifyEmail; SaveSettings(); }">
-                    <div class="toggle-knob"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Subjects Management -->
-        <div class="settings-section">
-            <h6 class="settings-section-title">My Subjects</h6>
-            <div class="d-flex gap-2 mb-2">
-                <input @bind="newSubjectName" class="form-control ssp-input" placeholder="Add subject..." />
-                <button class="btn btn-login px-3" @onclick="AddSubject">Add</button>
-            </div>
-            @foreach (var s in subjects)
-            {
-                <div class="settings-toggle-row">
-                    <span>@s.Name</span>
-                    <div class="d-flex align-items-center gap-2">
-                        <small class="text-muted">Weakness: @s.WeaknessPercent%</small>
-                        <button class="btn btn-sm btn-outline-danger py-0" @onclick="() => RemoveSubject(s)">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <!-- Account & Privacy -->
-        <div class="settings-section text-center">
-            <button class="btn btn-register w-100 mb-2" @onclick="Logout">
-                <i class="bi bi-box-arrow-right me-2"></i>Logout
-            </button>
-            <button class="btn btn-outline-secondary w-100">
-                <i class="bi bi-shield-lock me-2"></i>Account & Privacy
-            </button>
-        </div>
-
-        @if (!string.IsNullOrEmpty(saveMsg))
-        {
-            <div class="alert alert-success py-1 small mt-2">@saveMsg</div>
-        }
+    <!-- Table -->
+    <div class="task-table-wrapper">
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th>Task Name</th>
+                    <th>Description</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in FilteredTasks)
+                {
+                    <tr>
+                        <td class="task-name-cell">@task.Title</td>
+                        <td class="task-desc-cell">@task.Description</td>
+                        <td class="task-date-cell">
+                            @if (task.DueDate.HasValue)
+                            {
+                                <i class="bi bi-calendar3"></i> 
+                                @task.DueDate.Value.ToString("MMM dd")
+                            }
+                            else
+                            {
+                                <i class="bi bi-clock"></i>
+                            }
+                        </td>
+                        <td>
+                            <span class="status-badge @GetStatusClass(task)">
+                                @if (task.IsCompleted)
+                                {
+                                    <i class="bi bi-check-circle-fill"></i>
+                                }
+                                @GetStatus(task)
+                            </span>
+                        </td>
+                        <td>
+                            <span class="priority-badge @task.Priority.ToLower()">@task.Priority</span>
+                        </td>
+                        <td class="action-cell">
+                            <button class="btn-icon edit" @onclick="() => OpenEditModal(task)">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn-icon delete" @onclick="() => DeleteTask(task)">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                @if (!FilteredTasks.Any())
+                {
+                    <tr><td colspan="6" class="no-tasks">No tasks found.</td></tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
 
+<!-- Add/Edit Modal -->
+@if (showModal)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-box" @onclick:stopPropagation>
+            <div class="modal-header-row">
+                <h5>@(editingTask == null ? "Add New Task" : "Edit Task")</h5>
+                <button class="modal-close" @onclick="CloseModal"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body-form">
+                <label>Task Name</label>
+                <input class="modal-input" @bind="formTitle" placeholder="Enter task name..." />
+
+                <label>Description</label>
+                <textarea class="modal-input" @bind="formDesc" placeholder="Enter description..." rows="2"></textarea>
+
+                <label>Priority</label>
+                <select class="modal-input" @bind="formPriority">
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+
+                <label>Deadline</label>
+                <input class="modal-input" type="date" @bind="formDueDate" />
+
+                <label>Status</label>
+                <select class="modal-input" @bind="formStatus">
+                    <option value="Pending">Pending</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+
+                @if (!string.IsNullOrEmpty(errorMsg))
+                {
+                    <div class="error-msg">@errorMsg</div>
+                }
+
+                <button class="btn-save-task" @onclick="SaveTask">
+                    @(editingTask == null ? "Add Task" : "Save Changes")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    bool smartScheduler = true, nearExam = true, darkTheme = false, notifyStudy = true, notifyEmail = false;
-    List<Subject> subjects = new();
-    string newSubjectName = "";
-    string saveMsg = "";
+    List<StudyTask> tasks = new();
+    string filterPriority = "";
+    string filterStatus = "";
+    bool showModal = false;
+    StudyTask? editingTask = null;
+
+    string formTitle = "", formDesc = "", formPriority = "Medium", formStatus = "Pending";
+    DateTime? formDueDate;
+    string errorMsg = "";
+
+    IEnumerable<StudyTask> FilteredTasks => tasks
+        .Where(t => (string.IsNullOrEmpty(filterPriority) || t.Priority == filterPriority))
+        .Where(t => string.IsNullOrEmpty(filterStatus) ||
+            (filterStatus == "Completed" && t.IsCompleted) ||
+            (filterStatus == "Pending" && !t.IsCompleted && t.DueDate == null) ||
+            (filterStatus == "Scheduled" && !t.IsCompleted && t.DueDate != null));
 
     protected override async Task OnInitializedAsync()
     {
         if (!Auth.IsLoggedIn) return;
-        var u = Auth.CurrentUser!;
-        smartScheduler = u.SmartScheduler;
-        nearExam = u.NearExamPriority;
-        darkTheme = u.DarkTheme;
-        notifyStudy = u.NotifyStudyTime;
-        notifyEmail = u.NotifyEmail;
-        subjects = await Db.Subjects.Where(s => s.UserId == u.Id).ToListAsync();
+        tasks = await Db.StudyTasks.Where(t => t.UserId == Auth.CurrentUser!.Id).ToListAsync();
     }
 
-    async void SaveSettings()
+    void OpenAddModal()
     {
-        var user = await Db.Users.FindAsync(Auth.CurrentUser!.Id);
-        if (user == null) return;
-        user.SmartScheduler = smartScheduler;
-        user.NearExamPriority = nearExam;
-        user.DarkTheme = darkTheme;
-        user.NotifyStudyTime = notifyStudy;
-        user.NotifyEmail = notifyEmail;
-        Auth.CurrentUser!.DarkTheme = darkTheme;
+        editingTask = null;
+        formTitle = formDesc = errorMsg = "";
+        formPriority = "Medium"; formStatus = "Pending"; formDueDate = null;
+        showModal = true;
+    }
+
+    void OpenEditModal(StudyTask task)
+    {
+        editingTask = task;
+        formTitle = task.Title;
+        formDesc = task.Description ?? "";
+        formPriority = task.Priority;
+        formStatus = task.IsCompleted ? "Completed" : (task.DueDate != null ? "Scheduled" : "Pending");
+        formDueDate = task.DueDate;
+        errorMsg = "";
+        showModal = true;
+    }
+
+    void CloseModal() { showModal = false; errorMsg = ""; }
+
+    async Task SaveTask()
+    {
+        if (string.IsNullOrWhiteSpace(formTitle)) { errorMsg = "Task name is required."; return; }
+
+        if (editingTask == null)
+        {
+            var t = new StudyTask
+            {
+                UserId = Auth.CurrentUser!.Id,
+                Title = formTitle,
+                Description = formDesc,
+                Priority = formPriority,
+                IsCompleted = formStatus == "Completed",
+                DueDate = formDueDate
+            };
+            Db.StudyTasks.Add(t);
+            await Db.SaveChangesAsync();
+            tasks.Add(t);
+        }
+        else
+        {
+            editingTask.Title = formTitle;
+            editingTask.Description = formDesc;
+            editingTask.Priority = formPriority;
+            editingTask.IsCompleted = formStatus == "Completed";
+            editingTask.DueDate = formDueDate;
+            await Db.SaveChangesAsync();
+        }
+        CloseModal();
+    }
+
+    async Task DeleteTask(StudyTask task)
+    {
+        Db.StudyTasks.Remove(task);
         await Db.SaveChangesAsync();
-        saveMsg = "Saved!";
-        StateHasChanged();
-        await Task.Delay(1500);
-        saveMsg = "";
-        StateHasChanged();
+        tasks.Remove(task);
     }
 
-    async Task AddSubject()
-    {
-        if (string.IsNullOrWhiteSpace(newSubjectName)) return;
-        var s = new Subject { UserId = Auth.CurrentUser!.Id, Name = newSubjectName, WeaknessPercent = 50 };
-        Db.Subjects.Add(s);
-        await Db.SaveChangesAsync();
-        subjects.Add(s);
-        newSubjectName = "";
-    }
-
-    async Task RemoveSubject(Subject s)
-    {
-        Db.Subjects.Remove(s);
-        await Db.SaveChangesAsync();
-        subjects.Remove(s);
-    }
-
-    void Logout()
-    {
-        Auth.Logout();
-        Nav.NavigateTo("/login");
-    }
+    string GetStatus(StudyTask t) => t.IsCompleted ? "Completed" : (t.DueDate != null ? "Scheduled" : "Pending");
+    string GetStatusClass(StudyTask t) => t.IsCompleted ? "status-completed" : (t.DueDate != null ? "status-scheduled" : "status-pending");
 }
-
