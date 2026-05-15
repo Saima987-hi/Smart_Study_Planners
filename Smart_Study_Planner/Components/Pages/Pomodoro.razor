@@ -85,3 +85,85 @@
         </div>
     </div>
 </div>
+@code {
+    private System.Threading.Timer? timer;
+    private int totalSeconds = 25 * 60;
+    private int secondsLeft = 25 * 60;
+    private bool isRunning = false;
+    private int currentSession = 1;
+
+    // Is progressPct variable ka error aa raha tha
+    private double progressPct => 100.0 - (secondsLeft * 100.0 / totalSeconds);
+
+    // Is method ka error aa raha tha
+    private string FormatTime(int s) => $"{s / 60:D2}:{s % 60:D2}";
+
+    private void StartStop()
+    {
+        if (isRunning)
+        {
+            timer?.Dispose();
+            timer = null;
+            isRunning = false;
+        }
+        else
+        {
+            isRunning = true;
+            timer = new System.Threading.Timer(async _ =>
+            {
+                if (secondsLeft > 0)
+                {
+                    secondsLeft--;
+                    await InvokeAsync(StateHasChanged);
+                }
+                else
+                {
+                    isRunning = false;
+                    timer?.Dispose();
+                    timer = null;
+                    if (currentSession < 4) currentSession++;
+                    else currentSession = 1;
+                    secondsLeft = totalSeconds;
+                    await SaveSession();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }, null, 0, 1000);
+        }
+    }
+
+    private void Reset()
+    {
+        timer?.Dispose();
+        timer = null;
+        isRunning = false;
+        secondsLeft = totalSeconds;
+    }
+
+    private async Task SaveSession()
+    {
+        if (!Auth.IsLoggedIn) return;
+
+        var session = new PomodoroSession
+        {
+            UserId = Auth.CurrentUser!.Id,
+            DurationMinutes = 25,
+            IsCompleted = true
+        };
+
+        Db.PomodoroSessions.Add(session);
+
+        var user = await Db.Users.FindAsync(Auth.CurrentUser.Id);
+        if (user != null)
+        {
+            user.XpPoints += 50;
+            // Streak logic yahan add ho sakti hai
+        }
+
+        await Db.SaveChangesAsync();
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}
