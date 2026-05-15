@@ -1,4 +1,10 @@
-﻿<div class="pomodoro-container">
+﻿@page "/pomodoro"
+@using Smart_Study_Planner.Services
+@using Smart_Study_Planner.Data
+@inject AuthService Auth
+@inject AppDbContext Db
+@inject NavigationManager Nav
+<div class="pomodoro-container">
     <div class="pomodoro-header">
         <h2 class="page-title">Smart Study Pomodoro</h2>
     </div>
