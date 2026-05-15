@@ -1,122 +1,95 @@
-﻿namespace Smart_Study_Planner.Components.Pages
-{
-    public class Schedule
-    {
-    }
-}
-.schedule-wrapper {
-    padding: 30px;
-    background: #f0f5ff;
+﻿.schedule-container {
+    padding: 20px 40px;
+    background: #e8f1fd;
     min-height: 100vh;
-    font-family: 'Inter', sans-serif;
 }
 
-.schedule-grid-container {
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.schedule-grid {
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: 25px;
     align-items: start;
 }
 
-.glass-card {
+.dash-card {
     background: white;
-    border-radius: 16px;
-    padding: 24px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid #dee2e6;
 }
 
-.section-title {
-    font-weight: 700;
-    color: #1a202c;
+.card-title {
+    font-weight: bold;
     margin-bottom: 20px;
-    font-size: 1.1rem;
 }
 
 /* Input Styles */
-.form-group-custom {
+.input-section {
     margin-bottom: 20px;
 }
 
-    .form-group-custom label {
+    .input-section label {
         display: block;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #718096;
+        color: #4a5568;
+        font-weight: 500;
         margin-bottom: 8px;
     }
 
-.tags-wrapper {
+.tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 10px;
-}
-
-.subject-badge {
-    background: #ebf4ff;
-    color: #2b6cb0;
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-    .subject-badge i {
-        cursor: pointer;
-        color: #63b3ed;
-    }
-
-.add-subject-row {
-    display: flex;
-    gap: 8px;
-}
-
-.custom-select {
-    flex: 1;
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
+}
+
+.subject-tag {
+    background: #bee3f8;
+    color: #2c5282;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.btn-add-tag {
-    background: #2b6cb0;
-    color: white;
-    border: none;
-    width: 38px;
-    border-radius: 8px;
-    font-weight: bold;
-}
+    .subject-tag i {
+        cursor: pointer;
+    }
 
-.date-inputs-row {
+.date-row {
     display: flex;
     gap: 10px;
 }
 
-.icon-input {
+.date-input {
     position: relative;
     flex: 1;
 }
 
-    .icon-input i {
+    .date-input i {
         position: absolute;
         left: 10px;
         top: 10px;
-        color: #cbd5e0;
+        color: #a0aec0;
     }
 
-    .icon-input input {
+    .date-input input {
         width: 100%;
-        padding: 8px 8px 8px 32px;
+        padding: 8px 8px 8px 35px;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
-        font-size: 0.85rem;
     }
 
-.custom-select-full {
+.full-select {
     width: 100%;
     padding: 10px;
     border: 1px solid #e2e8f0;
@@ -124,110 +97,93 @@
     background: #f8fafc;
 }
 
-.btn-generate-main {
-    width: 100%;
-    background: #2d3748;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-    margin-top: 10px;
-    transition: 0.2s;
-}
-
-    .btn-generate-main:hover {
-        background: #1a202c;
-    }
-
 /* Timetable Styles */
-.timetable-main-section {
+.timetable-section {
     position: relative;
 }
 
-.day-name {
-    font-weight: 800;
-    color: #2d3748;
-    margin-bottom: 20px;
-    font-size: 1.2rem;
+.day-label-main {
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
 }
 
-.slot-row {
+.time-row {
     display: flex;
     gap: 15px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     align-items: center;
 }
 
-.time-badge {
+.time-box {
     background: #bee3f8;
     color: #2c5282;
-    width: 75px;
+    width: 80px;
     text-align: center;
-    padding: 8px;
+    padding: 10px;
     border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.content-box {
+.slot-content {
     flex: 1;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
     padding: 10px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 50px;
+    min-height: 45px;
 }
 
-.is-ai {
+.ai-border {
     border: 1px solid #d6bcfa;
     background: #faf5ff;
 }
 
-.ai-label {
+.ai-badge {
     background: #e9d8fd;
     color: #553c9a;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
-/* Floating Task Management */
-.task-mgmt-card {
+/* Task Mgmt Popup */
+.task-mgmt-popup {
     position: absolute;
-    bottom: 0;
-    right: 20px;
-    width: 320px;
+    bottom: -20px;
+    right: 0;
     background: white;
-    border-radius: 16px;
+    width: 300px;
     padding: 20px;
+    border-radius: 12px;
     border: 1px solid #e2e8f0;
-    z-index: 10;
 }
 
-.task-mgmt-item {
+.task-mgmt-title {
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.mgmt-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     margin-bottom: 12px;
-    font-size: 0.9rem;
 }
 
-.task-t {
+.t-title {
+    font-size: 0.9rem;
     flex: 1;
-    color: #4a5568;
 }
 
 .p-badge {
-    padding: 2px 10px;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    font-weight: bold;
+    padding: 2px 12px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    margin: 0 10px;
 }
 
     .p-badge.high {
@@ -235,12 +191,17 @@
         color: #c53030;
     }
 
-    .p-badge.medium {
-        background: #feebc8;
-        color: #c05621;
-    }
-
     .p-badge.low {
         background: #e2e8f0;
         color: #4a5568;
     }
+
+.btn-generate {
+    width: 100%;
+    background: #2c5282;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
