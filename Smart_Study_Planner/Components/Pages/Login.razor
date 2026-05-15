@@ -32,7 +32,6 @@
 
             @if (!isRegister)
             {
-                <!-- Login Form -->
                 <div class="login-form">
                     <div class="input-group-custom">
                         <i class="bi bi-envelope"></i>
@@ -62,7 +61,6 @@
             }
             else
             {
-                <!-- Register Form -->
                 <div class="login-form">
                     <div class="input-group-custom">
                         <i class="bi bi-person"></i>
@@ -123,21 +121,15 @@
         loading = true;
         errorMsg = "";
         StateHasChanged();
-
         var (ok, msg) = await Auth.LoginAsync(email, password);
         loading = false;
-
         if (ok) Nav.NavigateTo("/dashboard", forceLoad: false);
         else errorMsg = msg;
     }
 
     async Task DoRegister()
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            errorMsg = "Name is required.";
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(name)) { errorMsg = "Name is required."; return; }
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
             errorMsg = "Email and password are required.";
@@ -146,10 +138,8 @@
         loading = true;
         errorMsg = "";
         StateHasChanged();
-
         var (ok, msg) = await Auth.RegisterAsync(name, email, password);
         loading = false;
-
         if (ok) Nav.NavigateTo("/dashboard", forceLoad: false);
         else errorMsg = msg;
     }

@@ -11,7 +11,6 @@
 else
 {
     <div class="app-wrapper @(Auth.CurrentUser!.DarkTheme ? "dark-theme" : "")">
-        <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-brand">
                 <div class="brand-logo">
@@ -22,7 +21,6 @@ else
                     <span class="brand-sub">Planner</span>
                 </div>
             </div>
-
             <ul class="sidebar-nav">
                 <li>
                     <NavLink href="/dashboard" class="nav-link" ActiveClass="active">
@@ -63,7 +61,6 @@ else
             </ul>
         </nav>
 
-        <!-- Main Content -->
         <div class="main-content">
             <header class="top-header">
                 <div class="header-left">
@@ -78,7 +75,6 @@ else
                     </div>
                 </div>
             </header>
-
             <div class="page-body">
                 @Body
             </div>
