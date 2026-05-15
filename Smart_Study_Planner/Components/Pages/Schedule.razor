@@ -9,150 +9,94 @@
 
 @if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
 
-<div class="schedule-wrapper">
-    <div class="schedule-header-main">
-        <h2 class="page-title">Smart Study Scheduler</h2>
+<div class="schedule-container">
+    <div class="schedule-header">
+        <h2>Smart Study Scheduler</h2>
+        <div class="header-icons">
+            <i class="bi bi-bell"></i>
+            <div class="header-avatar">A</div>
+        </div>
     </div>
 
-    <div class="schedule-grid-container">
-        <div class="glass-card input-card">
-            <h6 class="section-title">Input Parameters</h6>
+    <div class="schedule-grid">
+        <div class="dash-card schedule-input-card">
+            <h5 class="card-title">Input Parameters</h5>
 
-            <div class="form-group-custom">
+            <div class="input-section">
                 <label>Subjects</label>
-                <div class="tags-wrapper">
+                <div class="tags-container">
                     @foreach (var s in selectedSubjects)
                     {
-                        <span class="subject-badge">@s <i class="bi bi-x-circle-fill" @onclick="() => selectedSubjects.Remove(s)"></i></span>
+                        <span class="subject-tag">@s <i class="bi bi-x" @onclick="() => selectedSubjects.Remove(s)"></i></span>
                     }
-                </div>
-                <div class="add-subject-row">
-                    <select @bind="subjectInput" class="custom-select">
-                        <option value="">-- Select Subject --</option>
-                        @foreach (var s in allSubjects)
-                        {
-                            <option value="@s.Name">@s.Name</option>
-                        }
-                    </select>
-                    <button class="btn-add-tag" @onclick="AddSubject">+</button>
+                    <div class="add-tag-box">
+                        <select @bind="subjectInput" @onblur="AddSubject">
+                            <option value="">+</option>
+                            @foreach (var s in allSubjects)
+                            {
+                                <option value="@s.Name">@s.Name</option>
+                            }
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group-custom">
+            <div class="input-section">
                 <label>Exam Dates</label>
-                <div class="date-inputs-row">
-                    <div class="icon-input"><i class="bi bi-calendar-event"></i><input @bind="examDate1" type="date" /></div>
-                    <div class="icon-input"><i class="bi bi-calendar-event"></i><input @bind="examDate2" type="date" /></div>
+                <div class="date-row">
+                    <div class="date-input"><i class="bi bi-calendar3"></i><input type="date" @bind="examDate1" /></div>
+                    <div class="date-input"><i class="bi bi-calendar3"></i><input type="date" @bind="examDate2" /></div>
                 </div>
             </div>
 
-            <div class="form-group-custom">
+            <div class="input-section">
                 <label>Available Hours</label>
-                <select @bind="availableHours" class="custom-select-full">
+                <select @bind="availableHours" class="full-select">
                     <option value="2">2 hrs/day</option>
-                    <option value="4" selected>4 hrs/day</option>
+                    <option value="4">4 hrs/day</option>
                     <option value="6">6 hrs/day</option>
-                    <option value="8">8 hrs/day</option>
                 </select>
             </div>
 
-            <button class="btn-generate-main" @onclick="GenerateSchedule">
-                <i class="bi bi-magic"></i> Generate Timetable
-            </button>
+            <button class="btn-generate" @onclick="GenerateSchedule">Generate Timetable</button>
         </div>
 
-        <div class="timetable-main-section">
-            <div class="glass-card timetable-card">
-                <h6 class="section-title">Generated Timetable (This Week)</h6>
+        <div class="timetable-section">
+            <div class="dash-card schedule-table-card">
+                <h5 class="card-title">Generated Timetable (This Week)</h5>
 
-                <div class="days-scroll-area">
-                    @foreach (var day in days)
-                    {
-                        <div class="timetable-day-block">
-                            <h5 class="day-name">@day</h5>
-                            <div class="slots-container">
-                                @foreach (var slot in timeSlots)
-                                {
-                                    var entry = scheduleEntries.FirstOrDefault(e => e.DayOfWeek == day && e.TimeSlot == slot);
-                                    <div class="slot-row">
-                                        <div class="time-badge">@slot</div>
-                                        <div class="content-box @(entry?.IsAiSuggested == true ? "is-ai" : "")">
-                                            @if (entry != null)
-                                            {
-                                                <span class="entry-title">@entry.Title</span>
-                                                @if (entry.IsAiSuggested)
-                                                {
-                                                    <span class="ai-label">AI Suggested</span>
-                                                }
-                                            }
-                                        </div>
-                                    </div>
-                                }
+                <div class="day-container">
+                    <div class="day-label-main">Monday</div>
+                    <div class="slots-list">
+                        @foreach (var slot in timeSlots)
+                        {
+                            var entry = scheduleEntries.FirstOrDefault(e => e.DayOfWeek == "Monday" && e.TimeSlot == slot);
+                            <div class="time-row">
+                                <div class="time-box">@slot</div>
+                                <div class="slot-content @(entry?.IsAiSuggested == true ? "ai-border" : "")">
+                                    <span>@entry?.Title</span>
+                                    @if (entry?.IsAiSuggested == true)
+                                    {
+                                        <span class="ai-badge">AI Suggested</span>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
 
-            <div class="task-mgmt-card shadow-lg">
-                <h6 class="section-title">Task Management</h6>
-                <div class="task-mgmt-list">
-                    @foreach (var task in taskList)
-                    {
-                        <div class="task-mgmt-item">
-                            <span class="task-t">@task.Title</span>
-                            <span class="p-badge @task.Priority.ToLower()">@task.Priority</span>
-                            <input type="checkbox" checked="@task.IsCompleted" @onchange="() => ToggleMgmtTask(task)" />
-                        </div>
-                    }
-                </div>
+            <div class="task-mgmt-popup shadow">
+                <h6 class="task-mgmt-title">Task Management</h6>
+                @foreach (var task in taskList)
+                {
+                    <div class="mgmt-row">
+                        <span class="t-title">@task.Title</span>
+                        <span class="p-badge @task.Priority.ToLower()">@task.Priority</span>
+                        <input type="checkbox" checked="@task.IsCompleted" @onchange="() => ToggleMgmtTask(task)" />
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
-@code {
-    // Ye variables missing hain isliye error aa raha hai
-    private List<string> selectedSubjects = new() { "OOP", "Networking" };
-    private List<Subject> allSubjects = new();
-    private List<ScheduleEntry> scheduleEntries = new();
-    private List<StudyTask> taskList = new();
-
-    private string subjectInput = "";
-    private DateTime? examDate1;
-    private DateTime? examDate2;
-    private string availableHours = "4";
-
-    private string[] days = { "Monday", "Tuesday", "Wednesday" };
-    private string[] timeSlots = { "09:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (!Auth.IsLoggedIn) return;
-        int uid = Auth.CurrentUser!.Id;
-
-        // Database se data load karna
-        allSubjects = await Db.Subjects.Where(s => s.UserId == uid).ToListAsync();
-        scheduleEntries = await Db.ScheduleEntries.Where(e => e.UserId == uid).ToListAsync();
-        taskList = await Db.StudyTasks.Where(t => t.UserId == uid).Take(3).ToListAsync();
-    }
-
-    private void AddSubject()
-    {
-        if (!string.IsNullOrEmpty(subjectInput) && !selectedSubjects.Contains(subjectInput))
-        {
-            selectedSubjects.Add(subjectInput);
-            subjectInput = ""; // Reset input
-        }
-    }
-
-    private async Task GenerateSchedule()
-    {
-        // Aapka purana schedule generation logic yahan aayega
-    }
-
-    private async Task ToggleMgmtTask(StudyTask task)
-    {
-        task.IsCompleted = !task.IsCompleted;
-        await Db.SaveChangesAsync();
-    }
-}
