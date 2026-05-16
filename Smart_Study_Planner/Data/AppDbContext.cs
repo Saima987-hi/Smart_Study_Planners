@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SmartStudyPlanner.Models;
+using Microsoft.EntityFrameworkCore;
+using Smart_Study_Planner.Models;
 
-namespace SmartStudyPlanner.Data
+namespace Smart_Study_Planner.Data
 {
     public class AppDbContext : DbContext
     {
