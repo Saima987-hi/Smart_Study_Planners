@@ -1,4 +1,7 @@
-﻿@page "/dashboard"
+﻿@* FILE: Smart_Study_Planner/Components/Pages/DashBoard.razor *@
+@* REPLACE your entire DashBoard.razor with this *@
+
+@page "/dashboard"
 @using Smart_Study_Planner.Services
 @using Smart_Study_Planner.Models
 @using Smart_Study_Planner.Data
@@ -19,10 +22,11 @@
             <div>
                 <p class="welcome-label">Welcome,</p>
                 <h3 class="welcome-name">@Auth.CurrentUser?.Name!</h3>
+                <small class="text-muted">🔥 @(Auth.CurrentUser?.StreakDays ?? 0) day streak &nbsp;|&nbsp; ⭐ @(Auth.CurrentUser?.XpPoints ?? 0) XP</small>
             </div>
         </div>
         <div class="progress-circle-wrap">
-            <p class="progress-label">Overall Progress</p>
+            <p class="progress-label">Tasks Progress</p>
             <div class="progress-circle">
                 <svg viewBox="0 0 100 100" width="100" height="100">
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#e0e8f5" stroke-width="10" />
@@ -45,12 +49,13 @@
                 <div class="task-item">
                     <input type="checkbox" checked="@t.IsCompleted" @onchange="() => ToggleTask(t)" />
                     <span class="@(t.IsCompleted ? "task-done" : "")">@t.Title</span>
+                    <span class="priority-badge priority-@t.Priority.ToLower() ms-auto">@t.Priority</span>
                 </div>
             }
         }
         else
         {
-            <p class="text-muted small">No tasks for today.</p>
+            <p class="text-muted small">No tasks yet. Add from My Tasks page.</p>
         }
     </div>
 
@@ -58,6 +63,10 @@
     <div class="dash-card chart-card">
         <h6 class="card-heading">Study Hours This Week</h6>
         <div class="bar-chart">
+            @if (!studyLogs.Any())
+            {
+                <p class="text-muted small">No study data yet.</p>
+            }
             @foreach (var log in studyLogs)
             {
                 <div class="bar-col">
@@ -71,14 +80,34 @@
     <!-- Upcoming Exams -->
     <div class="dash-card exams-card">
         <h6 class="card-heading">Upcoming Exams</h6>
+        @if (!upcomingExams.Any())
+        {
+            <p class="text-muted small">No upcoming exams.</p>
+        }
         @foreach (var ex in upcomingExams)
         {
+            int daysLeft = (int)(ex.ExamDate - DateTime.Today).TotalDays;
             <div class="exam-row">
                 <div>
                     <div class="exam-subject">@ex.SubjectName</div>
                     <div class="exam-course">@ex.CourseName</div>
                 </div>
-                <div class="exam-date">@ex.ExamDate.ToString("ddd")</div>
+                <div class="exam-date">
+                    @if (daysLeft == 0)
+                    {
+                        <span class="text-danger fw-bold">Today!</span>
+                    }
+                    else if (daysLeft == 1)
+                    {
+
+                        <span class="text-warning fw-bold">Tomorrow</span>
+                    }
+                    else
+                    {
+
+                        <span>@daysLeft days left</span>
+                    }
+                </div>
             </div>
         }
     </div>
@@ -86,6 +115,10 @@
     <!-- Weak Subjects -->
     <div class="dash-card weak-card">
         <h6 class="card-heading">Weak Subjects</h6>
+        @if (!weakSubjects.Any())
+        {
+            <p class="text-muted small">No subjects added yet.</p>
+        }
         @foreach (var s in weakSubjects)
         {
             <div class="weak-row">
@@ -104,7 +137,8 @@
     List<StudyLog> studyLogs = new();
     List<Exam> upcomingExams = new();
     List<Subject> weakSubjects = new();
-    int overallProgress = 68;
+    // ✅ FIX: Overall progress — poore DB se calculate hota hai
+    int overallProgress = 0;
     double maxH = 10;
 
     double dashValue => 2.51 * overallProgress;
@@ -124,23 +158,30 @@
         if (!Auth.IsLoggedIn) return;
         int uid = Auth.CurrentUser!.Id;
 
-        todayTasks = await Db.StudyTasks.Where(t => t.UserId == uid).Take(4).ToListAsync();
+        todayTasks = await Db.StudyTasks.Where(t => t.UserId == uid).OrderByDescending(t => t.CreatedAt).Take(5).ToListAsync();
         studyLogs = await Db.StudyLogs.Where(l => l.UserId == uid).OrderBy(l => l.Date).Take(7).ToListAsync();
         upcomingExams = await Db.Exams.Where(e => e.UserId == uid && e.ExamDate >= DateTime.Today).OrderBy(e => e.ExamDate).Take(3).ToListAsync();
         weakSubjects = await Db.Subjects.Where(s => s.UserId == uid).OrderByDescending(s => s.WeaknessPercent).Take(3).ToListAsync();
 
         maxH = studyLogs.Any() ? studyLogs.Max(l => l.HoursStudied) : 10;
-        var total = todayTasks.Count;
-        var done = todayTasks.Count(t => t.IsCompleted);
-        overallProgress = total > 0 ? (int)(done * 100.0 / total) : 68;
+
+        // ✅ FIX: Poore tasks ka progress — sirf 4 tasks nahi
+        int total = await Db.StudyTasks.CountAsync(t => t.UserId == uid);
+        int done = await Db.StudyTasks.CountAsync(t => t.UserId == uid && t.IsCompleted);
+        overallProgress = total > 0 ? (int)(done * 100.0 / total) : 0;
     }
 
     async Task ToggleTask(StudyTask task)
     {
         task.IsCompleted = !task.IsCompleted;
-        await Db.SaveChangesAsync();
-        var total = todayTasks.Count;
-        var done = todayTasks.Count(t => t.IsCompleted);
+        var dbTask = await Db.StudyTasks.FindAsync(task.Id);
+        if (dbTask != null)
+        {
+            dbTask.IsCompleted = task.IsCompleted;
+            await Db.SaveChangesAsync();
+        }
+        int total = await Db.StudyTasks.CountAsync(t => t.UserId == Auth.CurrentUser!.Id);
+        int done = await Db.StudyTasks.CountAsync(t => t.UserId == Auth.CurrentUser!.Id && t.IsCompleted);
         overallProgress = total > 0 ? (int)(done * 100.0 / total) : 0;
     }
 }

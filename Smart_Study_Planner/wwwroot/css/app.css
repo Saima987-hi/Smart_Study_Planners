@@ -668,3 +668,249 @@ body {
     .sidebar { display: none; }
     .main-content { margin-left: 0; }
 }
+/*Notes*/
+/* =============================================
+   NOTES PAGE
+   ============================================= */
+.notes-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+}
+
+.notes-input-card {
+}
+
+.note-card {
+}
+
+.note-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.note-title {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 4px;
+}
+
+.note-content {
+    font-size: .85rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.notes-filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* =============================================
+   CALENDAR PAGE
+   ============================================= */
+.calendar-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 16px;
+}
+
+.calendar-card {
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 4px;
+}
+
+.cal-weekday {
+    text-align: center;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 4px 0;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .82rem;
+    color: var(--text);
+    transition: background .15s;
+    position: relative;
+    padding: 2px;
+}
+
+    .cal-day:hover {
+        background: var(--primary-pale);
+    }
+
+    .cal-day.cal-today {
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .cal-day.cal-selected {
+        background: var(--primary-pale);
+        border: 2px solid var(--primary);
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    .cal-day.cal-today.cal-selected {
+        background: var(--primary);
+        color: #fff;
+    }
+
+    .cal-day.cal-other-month {
+        opacity: 0.3;
+    }
+
+.cal-day-num {
+    line-height: 1;
+}
+
+.cal-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--primary);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 3px;
+}
+
+.cal-event-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .88rem;
+}
+
+    .cal-event-row:last-child {
+        border-bottom: none;
+    }
+
+.cal-event-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cal-dot-primary {
+    background: var(--primary);
+}
+
+.cal-dot-danger {
+    background: #d63031;
+}
+
+.cal-dot-warning {
+    background: #e07b00;
+}
+
+/* =============================================
+   ANALYTICS — AI Recommendations
+   ============================================= */
+.ai-rec-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .88rem;
+    color: var(--text);
+}
+
+    .ai-rec-item:last-child {
+        border-bottom: none;
+    }
+
+/* =============================================
+   RESPONSIVE — New pages
+   ============================================= */
+@media (max-width: 900px) {
+    .notes-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =============================================
+   DARK THEME — Body level fix
+   ============================================= */
+body.dark-theme {
+    --bg: #101825;
+    --sidebar-bg: #15202e;
+    --card-bg: #1c2b3a;
+    --text: #e8f0fb;
+    --text-muted: #8aa5c8;
+    --border: #253548;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --primary-pale: #1a2f4a;
+}
+
+/* Priority badge — dark mode mein readable */
+.dark-theme .priority-high {
+    background: #3d1515;
+    color: #ff7675;
+}
+
+.dark-theme .priority-medium {
+    background: #3d2e00;
+    color: #fdcb6e;
+}
+
+.dark-theme .priority-low {
+    background: #0d2e18;
+    color: #55efc4;
+}
+
+/* Time cell AI suggested — dark mode */
+.dark-theme .time-cell.ai-suggested {
+    background: #1a2f4a;
+    border-color: #3a5a80;
+}
+
+/* Ssp-input dark mode */
+.dark-theme .ssp-input {
+    background: #15202e !important;
+    color: #e8f0fb !important;
+    border-color: #253548 !important;
+}
+
+.dark-theme .form-control::placeholder {
+    color: #5a7a9a;
+}

@@ -1,3 +1,6 @@
+﻿// FILE: Smart_Study_Planner/Data/AppDbContext.cs
+// REPLACE your entire AppDbContext.cs with this
+
 using Microsoft.EntityFrameworkCore;
 using Smart_Study_Planner.Models;
 
@@ -14,6 +17,9 @@ namespace Smart_Study_Planner.Data
         public DbSet<ScheduleEntry> ScheduleEntries => Set<ScheduleEntry>();
         public DbSet<PomodoroSession> PomodoroSessions => Set<PomodoroSession>();
         public DbSet<StudyLog> StudyLogs => Set<StudyLog>();
+        // ✅ NEW: Notes aur Calendar DbSets
+        public DbSet<Note> Notes => Set<Note>();
+        public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

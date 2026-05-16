@@ -1,4 +1,7 @@
-﻿@page "/schedule"
+﻿@* FILE: Smart_Study_Planner/Components/Pages/Schedule.razor *@
+@* REPLACE your entire Schedule.razor with this *@
+
+@page "/schedule"
 @using Smart_Study_Planner.Services
 @using Smart_Study_Planner.Models
 @using Smart_Study_Planner.Data
@@ -38,17 +41,29 @@
             <input @bind="examDate2" type="date" class="form-control ssp-input" />
         </div>
 
-        <label class="ssp-label">Available Hours</label>
-        <select @bind="availableHours" class="form-select ssp-input mb-4">
+        <label class="ssp-label">Available Hours Per Day</label>
+        <select @bind="availableHours" class="form-select ssp-input mb-3">
             <option value="2">2 hrs/day</option>
             <option value="4" selected>4 hrs/day</option>
             <option value="6">6 hrs/day</option>
             <option value="8">8 hrs/day</option>
         </select>
 
+        <label class="ssp-label">Difficulty Focus</label>
+        <select @bind="difficultyFocus" class="form-select ssp-input mb-4">
+            <option value="auto">Auto (Smart Priority)</option>
+            <option value="hard">Hard Subjects First</option>
+            <option value="easy">Easy Subjects First</option>
+        </select>
+
         <button class="btn btn-login w-100" @onclick="GenerateSchedule">
             <i class="bi bi-magic me-2"></i>Generate Timetable
         </button>
+
+        @if (!string.IsNullOrEmpty(genMsg))
+        {
+            <div class="alert alert-success py-1 mt-2 small">@genMsg</div>
+        }
     </div>
 
     <!-- Right: Timetable -->
@@ -57,11 +72,12 @@
 
         @foreach (var day in days)
         {
+            var dayEntries = scheduleEntries.Where(e => e.DayOfWeek == day).ToList();
             <div class="timetable-day">
                 <div class="day-header">@day</div>
                 @foreach (var slot in timeSlots)
                 {
-                    var entry = scheduleEntries.FirstOrDefault(e => e.DayOfWeek == day && e.TimeSlot == slot);
+                    var entry = dayEntries.FirstOrDefault(e => e.TimeSlot == slot);
                     <div class="time-row">
                         <span class="time-label">@slot</span>
                         <div class="time-cell @(entry?.IsAiSuggested == true ? "ai-suggested" : "")">
@@ -70,7 +86,7 @@
                                 <span>@entry.Title</span>
                                 @if (entry.IsAiSuggested)
                                 {
-                                    <span class="ai-badge">AI Suggested</span>
+                                    <span class="ai-badge">AI</span>
                                 }
                             }
                         </div>
@@ -79,13 +95,17 @@
             </div>
         }
 
-        <!-- Task Management -->
+        <!-- ✅ FIX: Task Management — ab Tasks page se sync hota hai -->
         <div class="task-mgmt-box mt-3">
             <h6 class="card-heading">Task Management</h6>
+            @if (!taskList.Any())
+            {
+                <p class="text-muted small">No tasks found. Add tasks from My Tasks page.</p>
+            }
             @foreach (var task in taskList)
             {
                 <div class="task-mgmt-row">
-                    <span>@task.Title</span>
+                    <span class="@(task.IsCompleted ? "text-decoration-line-through text-muted" : "")">@task.Title</span>
                     <span class="priority-badge priority-@task.Priority.ToLower()">@task.Priority</span>
                     <input type="checkbox" checked="@task.IsCompleted" @onchange="() => ToggleMgmtTask(task)" />
                 </div>
@@ -98,13 +118,16 @@
     List<string> selectedSubjects = new() { "OOP", "Networking" };
     List<Subject> allSubjects = new();
     List<ScheduleEntry> scheduleEntries = new();
-    List<StudyTask> taskList = new();
+    List<StudyTask> taskList = new(); // ✅ FIX: Tasks page se sync
     string subjectInput = "";
     DateTime? examDate1, examDate2;
     string availableHours = "4";
+    string difficultyFocus = "auto";
+    string genMsg = "";
 
-    string[] days = { "Monday", "Tuesday", "Wednesday" };
-    string[] timeSlots = { "09:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
+    // ✅ FIX: Poore 7 din aur zyada time slots
+    string[] days = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+    string[] timeSlots = { "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,7 +135,8 @@
         int uid = Auth.CurrentUser!.Id;
         allSubjects = await Db.Subjects.Where(s => s.UserId == uid).ToListAsync();
         scheduleEntries = await Db.ScheduleEntries.Where(e => e.UserId == uid).ToListAsync();
-        taskList = await Db.StudyTasks.Where(t => t.UserId == uid).Take(3).ToListAsync();
+        // ✅ FIX: Saari tasks load ho rahi hain, sirf 3 nahi
+        taskList = await Db.StudyTasks.Where(t => t.UserId == uid).OrderByDescending(t => t.CreatedAt).ToListAsync();
     }
 
     void AddSubject()
@@ -125,35 +149,91 @@
     async Task GenerateSchedule()
     {
         int uid = Auth.CurrentUser!.Id;
+
+        // ✅ FIX: Smart priority — weak subjects ko zyada time milta hai
+        var subjectsWithWeakness = await Db.Subjects
+            .Where(s => s.UserId == uid && selectedSubjects.Contains(s.Name))
+            .OrderByDescending(s => s.WeaknessPercent)
+            .ToListAsync();
+
+        // Subjects list jo exist nahi karti DB mein wo bhi include karo
+        var dbSubjectNames = subjectsWithWeakness.Select(s => s.Name).ToList();
+        var extraSubjects = selectedSubjects.Where(s => !dbSubjectNames.Contains(s)).ToList();
+
+        // ✅ FIX: Exam ke paas wale subjects ko priority do
+        var exams = await Db.Exams.Where(e => e.UserId == uid && e.ExamDate >= DateTime.Today).OrderBy(e => e.ExamDate).ToListAsync();
+
         var existing = Db.ScheduleEntries.Where(e => e.UserId == uid);
         Db.ScheduleEntries.RemoveRange(existing);
 
         var entries = new List<ScheduleEntry>();
         var rnd = new Random();
+        int hoursPerDay = int.Parse(availableHours);
+        int slotsPerDay = hoursPerDay / 2;
+
         foreach (var day in days)
         {
-            var slots = timeSlots.OrderBy(_ => rnd.Next()).Take(int.Parse(availableHours) / 2).ToList();
+            var slots = timeSlots.OrderBy(_ => rnd.Next()).Take(slotsPerDay).OrderBy(s => s).ToList();
+            int slotIdx = 0;
+
             foreach (var slot in slots)
             {
-                var subj = selectedSubjects.Any() ? selectedSubjects[rnd.Next(selectedSubjects.Count)] : "Study";
+                string subjName;
+
+                // ✅ SMART LOGIC: Exam near hai to wo subject pehle
+                var nearExamSubject = exams
+                    .Where(e => selectedSubjects.Contains(e.SubjectName) && (e.ExamDate - DateTime.Today).TotalDays <= 3)
+                    .Select(e => e.SubjectName)
+                    .FirstOrDefault();
+
+                if (nearExamSubject != null && slotIdx == 0)
+                {
+                    subjName = nearExamSubject;
+                }
+                else if (difficultyFocus == "hard" && subjectsWithWeakness.Any())
+                {
+                    // Weak subjects ko zyada time
+                    subjName = subjectsWithWeakness[slotIdx % subjectsWithWeakness.Count].Name;
+                }
+                else if (selectedSubjects.Any())
+                {
+                    subjName = selectedSubjects[rnd.Next(selectedSubjects.Count)];
+                }
+                else
+                {
+                    subjName = "Study";
+                }
+
+                bool isAi = nearExamSubject != null || difficultyFocus == "auto";
                 entries.Add(new ScheduleEntry
                 {
                     UserId = uid,
-                    Title = $"{subj} Revision",
+                    Title = $"{subjName} Revision",
                     DayOfWeek = day,
                     TimeSlot = slot,
-                    IsAiSuggested = rnd.Next(2) == 0
+                    IsAiSuggested = isAi
                 });
+                slotIdx++;
             }
         }
+
         Db.ScheduleEntries.AddRange(entries);
         await Db.SaveChangesAsync();
         scheduleEntries = entries;
+        genMsg = "Timetable generated!";
+        await Task.Delay(2000);
+        genMsg = "";
     }
 
     async Task ToggleMgmtTask(StudyTask task)
     {
         task.IsCompleted = !task.IsCompleted;
-        await Db.SaveChangesAsync();
+        // ✅ FIX: DB mein save hota hai — Tasks page bhi reflect karega
+        var dbTask = await Db.StudyTasks.FindAsync(task.Id);
+        if (dbTask != null)
+        {
+            dbTask.IsCompleted = task.IsCompleted;
+            await Db.SaveChangesAsync();
+        }
     }
 }

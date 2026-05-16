@@ -1,0 +1,198 @@
+﻿@* FILE: Smart_Study_Planner/Components/Pages/Calendar.razor *@
+@* NEW FILE — Copy karo Components/Pages/ folder mein *@
+
+@page "/calendar"
+@using Smart_Study_Planner.Services
+@using Smart_Study_Planner.Models
+@using Smart_Study_Planner.Data
+@using Microsoft.EntityFrameworkCore
+@inject AuthService Auth
+@inject AppDbContext Db
+@inject NavigationManager Nav
+
+@if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
+
+<div class="calendar-layout">
+    <!-- Left: Monthly Calendar -->
+    <div class="dash-card calendar-card">
+        <div class="calendar-header">
+            <button class="timer-btn" @onclick="PrevMonth"><i class="bi bi-chevron-left"></i></button>
+            <h6 class="card-heading mb-0">@currentMonth.ToString("MMMM yyyy")</h6>
+            <button class="timer-btn" @onclick="NextMonth"><i class="bi bi-chevron-right"></i></button>
+        </div>
+
+        <div class="cal-weekdays">
+            @foreach (var d in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
+            {
+                <div class="cal-weekday">@d</div>
+            }
+        </div>
+
+        <div class="cal-grid">
+            @foreach (var day in calendarDays)
+            {
+                <div class="cal-day @(day == DateTime.Today ? "cal-today" : "") @(day.Month != currentMonth.Month ? "cal-other-month" : "") @(selectedDay == day ? "cal-selected" : "")"
+                     @onclick="() => SelectDay(day)">
+                    <span class="cal-day-num">@day.Day</span>
+                    @if (HasEvent(day))
+                    {
+                        <div class="cal-dot"></div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right: Events for selected day + Add Event -->
+    <div>
+        <div class="dash-card mb-3">
+            <h6 class="card-heading">Add Event — @selectedDay.ToString("MMM dd, yyyy")</h6>
+            <div class="mb-2">
+                <input @bind="newEventTitle" class="form-control ssp-input" placeholder="Event title (e.g. Math Exam)" />
+            </div>
+            <div class="mb-2">
+                <select @bind="newEventType" class="form-select ssp-input">
+                    <option value="Exam">Exam</option>
+                    <option value="Assignment">Assignment</option>
+                    <option value="Study">Study Session</option>
+                    <option value="Revision">Revision</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            @if (!string.IsNullOrEmpty(eventMsg))
+            {
+                <div class="alert alert-info py-1 small mb-2">@eventMsg</div>
+            }
+            <button class="btn btn-login w-100" @onclick="AddEvent">
+                <i class="bi bi-plus-lg me-2"></i>Add Event
+            </button>
+        </div>
+
+        <div class="dash-card">
+            <h6 class="card-heading">Events — @selectedDay.ToString("MMM dd")</h6>
+            @if (!dayEvents.Any())
+            {
+                <p class="text-muted small">No events for this day.</p>
+            }
+            @foreach (var ev in dayEvents)
+            {
+                <div class="cal-event-row">
+                    <span class="cal-event-dot @GetEventColor(ev.EventType)"></span>
+                    <div class="flex-grow-1">
+                        <div class="fw-500">@ev.Title</div>
+                        <small class="text-muted">@ev.EventType</small>
+                    </div>
+                    <button class="action-btn text-danger" @onclick="() => DeleteEvent(ev)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            }
+
+            @* Also show exams from Exams table on this day *@
+            @foreach (var ex in dayExams)
+            {
+                <div class="cal-event-row">
+                    <span class="cal-event-dot cal-dot-danger"></span>
+                    <div class="flex-grow-1">
+                        <div class="fw-500">@ex.SubjectName Exam</div>
+                        <small class="text-muted">@ex.CourseName</small>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    DateTime currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    DateTime selectedDay = DateTime.Today;
+    List<DateTime> calendarDays = new();
+    List<CalendarEvent> allEvents = new();
+    List<CalendarEvent> dayEvents = new();
+    List<Exam> dayExams = new();
+    string newEventTitle = "", newEventType = "Study", eventMsg = "";
+
+    bool HasEvent(DateTime day) => allEvents.Any(e => e.EventDate.Date == day.Date);
+
+    string GetEventColor(string type) => type switch
+    {
+        "Exam" => "cal-dot-danger",
+        "Assignment" => "cal-dot-warning",
+        "Study" => "cal-dot-primary",
+        _ => "cal-dot-primary"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn) return;
+        BuildCalendar();
+        await LoadEvents();
+    }
+
+    void BuildCalendar()
+    {
+        calendarDays.Clear();
+        var first = new DateTime(currentMonth.Year, currentMonth.Month, 1);
+        var start = first.AddDays(-(int)first.DayOfWeek);
+        for (int i = 0; i < 42; i++)
+            calendarDays.Add(start.AddDays(i));
+    }
+
+    async Task LoadEvents()
+    {
+        int uid = Auth.CurrentUser!.Id;
+        allEvents = await Db.CalendarEvents.Where(e => e.UserId == uid).ToListAsync();
+        await LoadDayEvents();
+    }
+
+    async Task LoadDayEvents()
+    {
+        int uid = Auth.CurrentUser!.Id;
+        dayEvents = allEvents.Where(e => e.EventDate.Date == selectedDay.Date).ToList();
+        dayExams = await Db.Exams.Where(e => e.UserId == uid && e.ExamDate.Date == selectedDay.Date).ToListAsync();
+    }
+
+    async Task SelectDay(DateTime day)
+    {
+        selectedDay = day;
+        await LoadDayEvents();
+    }
+
+    void PrevMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+        BuildCalendar();
+    }
+
+    void NextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        BuildCalendar();
+    }
+
+    async Task AddEvent()
+    {
+        if (string.IsNullOrWhiteSpace(newEventTitle)) { eventMsg = "Title required."; return; }
+        var ev = new CalendarEvent
+        {
+            UserId = Auth.CurrentUser!.Id,
+            Title = newEventTitle,
+            EventDate = selectedDay,
+            EventType = newEventType
+        };
+        Db.CalendarEvents.Add(ev);
+        await Db.SaveChangesAsync();
+        newEventTitle = "";
+        eventMsg = "Event added!";
+        await LoadEvents();
+        await Task.Delay(1500);
+        eventMsg = "";
+    }
+
+    async Task DeleteEvent(CalendarEvent ev)
+    {
+        Db.CalendarEvents.Remove(ev);
+        await Db.SaveChangesAsync();
+        await LoadEvents();
+    }
+}

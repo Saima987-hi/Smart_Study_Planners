@@ -1,4 +1,7 @@
-﻿@page "/settings"
+﻿@* FILE: Smart_Study_Planner/Components/Pages/Settings.razor *@
+@* REPLACE your entire Settings.razor with this *@
+
+@page "/settings"
 @using Smart_Study_Planner.Services
 @using Smart_Study_Planner.Models
 @using Smart_Study_Planner.Data
@@ -6,6 +9,7 @@
 @inject AuthService Auth
 @inject AppDbContext Db
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 @if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
 
@@ -26,8 +30,7 @@
             </div>
             <hr class="ssp-divider" />
             <div class="d-flex justify-content-between align-items-center">
-                <span class="settings-link-text">ASP.NET Identity</span>
-                <a href="#" class="settings-link-btn">Settings <i class="bi bi-chevron-right"></i></a>
+                <span class="settings-link-text">Gamification: <strong>@(Auth.CurrentUser?.XpPoints ?? 0) XP</strong> &nbsp;|&nbsp; 🔥 @(Auth.CurrentUser?.StreakDays ?? 0) Day Streak</span>
             </div>
         </div>
 
@@ -36,13 +39,13 @@
             <h6 class="settings-section-title">Smart Scheduler Preferences</h6>
             <div class="settings-toggle-row">
                 <span>Difficult subjects get more time</span>
-                <div class="toggle-switch @(smartScheduler ? "on" : "")" @onclick="() => { smartScheduler = !smartScheduler; SaveSettings(); }">
+                <div class="toggle-switch @(smartScheduler ? "on" : "")" @onclick="ToggleSmartScheduler">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             <div class="settings-toggle-row">
                 <span>Near exams high priority</span>
-                <div class="toggle-switch @(nearExam ? "on" : "")" @onclick="() => { nearExam = !nearExam; SaveSettings(); }">
+                <div class="toggle-switch @(nearExam ? "on" : "")" @onclick="ToggleNearExam">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -53,7 +56,8 @@
             <h6 class="settings-section-title">Appearance</h6>
             <div class="theme-toggle-row">
                 <span>Light Theme</span>
-                <div class="theme-switch @(darkTheme ? "dark" : "light")" @onclick="() => { darkTheme = !darkTheme; SaveSettings(); }">
+                <!-- ✅ FIX: Dark theme ab actually kaam karti hai -->
+                <div class="theme-switch @(darkTheme ? "dark" : "light")" @onclick="ToggleDarkTheme">
                     <div class="theme-knob"></div>
                 </div>
                 <span>Dark Theme</span>
@@ -64,14 +68,14 @@
         <div class="settings-section">
             <h6 class="settings-section-title">Notifications</h6>
             <div class="settings-toggle-row">
-                <span>Study time</span>
-                <div class="toggle-switch @(notifyStudy ? "on" : "")" @onclick="() => { notifyStudy = !notifyStudy; SaveSettings(); }">
+                <span>Study time reminders</span>
+                <div class="toggle-switch @(notifyStudy ? "on" : "")" @onclick="ToggleNotifyStudy">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
             <div class="settings-toggle-row">
                 <span>Email reminders</span>
-                <div class="toggle-switch @(notifyEmail ? "on" : "")" @onclick="() => { notifyEmail = !notifyEmail; SaveSettings(); }">
+                <div class="toggle-switch @(notifyEmail ? "on" : "")" @onclick="ToggleNotifyEmail">
                     <div class="toggle-knob"></div>
                 </div>
             </div>
@@ -110,7 +114,7 @@
 
         @if (!string.IsNullOrEmpty(saveMsg))
         {
-            <div class="alert alert-success py-1 small mt-2">@saveMsg</div>
+            <div class="alert alert-success py-1 small mt-2 mx-3 mb-3">@saveMsg</div>
         }
     </div>
 </div>
@@ -133,7 +137,20 @@
         subjects = await Db.Subjects.Where(s => s.UserId == u.Id).ToListAsync();
     }
 
-    async void SaveSettings()
+    // ✅ FIX: Har toggle ka alag method — async properly kaam karta hai
+    async Task ToggleDarkTheme()
+    {
+        darkTheme = !darkTheme;
+        await SaveSettings();
+        await JS.InvokeVoidAsync("applyTheme", darkTheme); // body par class lagao turant
+    }
+
+    async Task ToggleSmartScheduler() { smartScheduler = !smartScheduler; await SaveSettings(); }
+    async Task ToggleNearExam() { nearExam = !nearExam; await SaveSettings(); }
+    async Task ToggleNotifyStudy() { notifyStudy = !notifyStudy; await SaveSettings(); }
+    async Task ToggleNotifyEmail() { notifyEmail = !notifyEmail; await SaveSettings(); }
+
+    async Task SaveSettings()
     {
         var user = await Db.Users.FindAsync(Auth.CurrentUser!.Id);
         if (user == null) return;

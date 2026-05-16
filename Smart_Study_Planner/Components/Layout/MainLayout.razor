@@ -1,7 +1,11 @@
-﻿@inherits LayoutComponentBase
+﻿@* FILE: Smart_Study_Planner/Components/Layout/MainLayout.razor *@
+@* REPLACE your entire MainLayout.razor with this *@
+
+@inherits LayoutComponentBase
 @using Smart_Study_Planner.Services
 @inject AuthService Auth
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 @if (!Auth.IsLoggedIn)
 {
@@ -9,7 +13,7 @@
 }
 else
 {
-    <div class="app-wrapper @(Auth.CurrentUser!.DarkTheme ? "dark-theme" : "")">
+    <div class="app-wrapper @(Auth.CurrentUser!.DarkTheme ? "dark-theme" : "")" id="appWrapper">
         <!-- Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-brand">
@@ -54,6 +58,18 @@ else
                     </NavLink>
                 </li>
                 <li>
+                    <NavLink href="/notes" class="nav-link" ActiveClass="active">
+                        <i class="bi bi-journal-text"></i>
+                        <span>Notes</span>
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="/calendar" class="nav-link" ActiveClass="active">
+                        <i class="bi bi-calendar-week-fill"></i>
+                        <span>Calendar</span>
+                    </NavLink>
+                </li>
+                <li>
                     <NavLink href="/settings" class="nav-link" ActiveClass="active">
                         <i class="bi bi-gear-fill"></i>
                         <span>Settings</span>
@@ -86,6 +102,16 @@ else
 }
 
 @code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Auth.IsLoggedIn)
+        {
+            // ✅ FIX: Dark theme actually apply hoti hai body par
+            bool dark = Auth.CurrentUser?.DarkTheme ?? false;
+            await JS.InvokeVoidAsync("applyTheme", dark);
+        }
+    }
+
     string GetPageTitle()
     {
         var path = Nav.Uri.ToLower();
@@ -94,6 +120,8 @@ else
         if (path.Contains("tasks")) return "My Tasks";
         if (path.Contains("pomodoro")) return "Smart Study Pomodoro";
         if (path.Contains("analytics")) return "Academic Analytics & Reports";
+        if (path.Contains("notes")) return "My Notes";
+        if (path.Contains("calendar")) return "Study Calendar";
         if (path.Contains("settings")) return "Settings & Configuration";
         return "Smart Study Planner";
     }

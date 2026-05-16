@@ -1,3 +1,6 @@
+﻿// FILE: Smart_Study_Planner/Models/Models.cs
+// REPLACE your entire Models.cs with this
+
 namespace Smart_Study_Planner.Models
 {
     public class User
@@ -20,6 +23,9 @@ namespace Smart_Study_Planner.Models
         public List<Exam> Exams { get; set; } = new();
         public List<PomodoroSession> PomodoroSessions { get; set; } = new();
         public List<StudyLog> StudyLogs { get; set; } = new();
+        // ✅ NEW: Notes aur Calendar
+        public List<Note> Notes { get; set; } = new();
+        public List<CalendarEvent> CalendarEvents { get; set; } = new();
     }
 
     public class StudyTask
@@ -83,6 +89,29 @@ namespace Smart_Study_Planner.Models
         public int UserId { get; set; }
         public DateTime Date { get; set; }
         public double HoursStudied { get; set; }
+        public User? User { get; set; }
+    }
+
+    // ✅ NEW MODEL: Notes
+    public class Note
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string Title { get; set; } = "";
+        public string Content { get; set; } = "";
+        public string? SubjectName { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public User? User { get; set; }
+    }
+
+    // ✅ NEW MODEL: Calendar Events
+    public class CalendarEvent
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string Title { get; set; } = "";
+        public DateTime EventDate { get; set; }
+        public string EventType { get; set; } = "Study"; // Exam, Assignment, Study, Revision, Other
         public User? User { get; set; }
     }
 }

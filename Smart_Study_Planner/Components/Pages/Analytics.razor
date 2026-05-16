@@ -1,4 +1,7 @@
-﻿@page "/analytics"
+﻿@* FILE: Smart_Study_Planner/Components/Pages/Analytics.razor *@
+@* REPLACE your entire Analytics.razor with this *@
+
+@page "/analytics"
 @using Smart_Study_Planner.Services
 @using Smart_Study_Planner.Models
 @using Smart_Study_Planner.Data
@@ -14,81 +17,74 @@
         <div class="user-avatar">@(Auth.CurrentUser?.Name?.Substring(0, 1).ToUpper())</div>
         <div>
             <div class="fw-semibold">@Auth.CurrentUser?.Name</div>
-            <div class="small text-muted">ASP.NET Identity</div>
+            <div class="small text-muted">Smart Study Planner</div>
         </div>
     </div>
 </div>
 
 <div class="analytics-charts-row">
-    <!-- Study Hours & Efficiency -->
+    <!-- ✅ FIX: Study Hours — real DB data se chart -->
     <div class="dash-card">
-        <h6 class="card-heading">Study Hours &amp; Efficiency <span class="text-muted small">(Past Month)</span></h6>
-        <div class="line-chart-wrap">
-            <svg viewBox="0 0 360 120" width="100%" height="120">
-                <polyline fill="none" stroke="#2d5fa0" stroke-width="2.5"
-                          points="0,110 60,90 120,70 180,80 240,40 300,20 360,5" />
-                <circle cx="180" cy="80" r="5" fill="#2d5fa0" />
-                <text x="185" y="75" font-size="10" fill="#2d5fa0">Module 12/2</text>
-            </svg>
-            <div class="chart-days">
-                @foreach (var m in new[] { "Mon", "Jul", "Nov", "Dec", "Jan", "Feb" })
-                {
-                    <span>@m</span>
-                }
-            </div>
-        </div>
-    </div>
-
-    <!-- Subject-wise Performance -->
-    <div class="dash-card">
-        <h6 class="card-heading">Subject-wise Performance <span class="text-muted small">(Quiz &amp; Assignment)</span></h6>
-        <div class="grouped-bar-chart">
-            @foreach (var subj in subjects)
+        <h6 class="card-heading">Study Hours This Week</h6>
+        <div class="bar-chart" style="height:120px;">
+            @if (!studyLogs.Any())
             {
-                <div class="grouped-bar-col">
-                    <div class="grouped-bars">
-                        <div class="gbar gbar-dark" style="@GbarStyle(subj.Quiz)" title="Quiz: @subj.Quiz%">
-                            <span class="gbar-label">@subj.Quiz%</span>
-                        </div>
-                        <div class="gbar gbar-mid" style="@GbarStyle(subj.Assignment)" title="Assign: @subj.Assignment%">
-                            <span class="gbar-label">@subj.Assignment%</span>
-                        </div>
-                    </div>
-                    <span class="bar-label">@subj.Name</span>
+                <p class="text-muted small">No study logs yet. Complete Pomodoro sessions to track hours.</p>
+            }
+            @foreach (var log in studyLogs)
+            {
+                <div class="bar-col">
+                    <div class="bar" style="@GetBarStyle(log.HoursStudied)"></div>
+                    <span class="bar-label">@log.Date.ToString("ddd")</span>
                 </div>
             }
         </div>
     </div>
 
-    <!-- Subject Weakness Radar -->
+    <!-- ✅ FIX: Subject Performance — real DB subjects se -->
     <div class="dash-card">
         <h6 class="card-heading">Subject Weakness Analysis</h6>
-        <div class="radar-wrap">
-            <svg viewBox="0 0 200 200" width="180" height="180">
-                <polygon points="100,20 180,60 180,140 100,180 20,140 20,60" fill="none" stroke="#dce8f5" stroke-width="1" />
-                <polygon points="100,40 160,70 160,130 100,160 40,130 40,70" fill="none" stroke="#dce8f5" stroke-width="1" />
-                <polygon points="100,60 140,80 140,120 100,140 60,120 60,80" fill="none" stroke="#dce8f5" stroke-width="1" />
-                <polygon points="100,35 165,65 155,135 100,168 35,130 40,62"
-                         fill="rgba(45,95,160,0.2)" stroke="#2d5fa0" stroke-width="2" />
-                <text x="94" y="15" font-size="9" fill="#444">Coverage</text>
-                <text x="182" y="62" font-size="9" fill="#444">OOP</text>
-                <text x="182" y="142" font-size="9" fill="#444">NOP</text>
-                <text x="75" y="193" font-size="9" fill="#444">Networking</text>
-                <text x="2" y="142" font-size="9" fill="#444">Physics</text>
-                <text x="8" y="62" font-size="9" fill="#444">Math</text>
-            </svg>
-        </div>
+        @if (!dbSubjects.Any())
+        {
+            <p class="text-muted small">No subjects added yet.</p>
+        }
+        @foreach (var s in dbSubjects)
+        {
+            <div class="weak-row mb-2">
+                <span class="weak-name">@s.Name</span>
+                <div class="weak-bar-wrap">
+                    <div class="weak-bar" style="width:@s.WeaknessPercent%"></div>
+                </div>
+                <span class="weak-pct">@s.WeaknessPercent%</span>
+            </div>
+        }
+    </div>
+
+    <!-- AI Recommendations Panel -->
+    <div class="dash-card">
+        <h6 class="card-heading">AI Recommendations</h6>
+        @if (!recommendations.Any())
+        {
+            <p class="text-muted small">Great job! Keep studying consistently.</p>
+        }
+        @foreach (var rec in recommendations)
+        {
+            <div class="ai-rec-item">
+                <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                <span>@rec</span>
+            </div>
+        }
     </div>
 </div>
 
-<!-- Key Metrics -->
+<!-- ✅ FIX: Key Metrics — real DB se calculate -->
 <div class="key-metrics-row mt-3">
     <div class="metric-card">
-        <span class="metric-label">Total Study Time (Hrs)</span>
+        <span class="metric-label">Total Study Time</span>
         <span class="metric-value">@totalStudyHours hrs</span>
     </div>
     <div class="metric-card">
-        <span class="metric-label">Overall Consistency (%)</span>
+        <span class="metric-label">Consistency</span>
         <span class="metric-value">@consistencyPct%</span>
     </div>
     <div class="metric-card">
@@ -96,36 +92,86 @@
         <span class="metric-value">@tasksCompleted</span>
     </div>
     <div class="metric-card">
-        <span class="metric-label">Weak Areas Identified</span>
+        <span class="metric-label">Weak Subjects</span>
         <span class="metric-value">@weakAreas</span>
     </div>
 </div>
 
+<!-- Pomodoro Sessions This Week -->
+<div class="dash-card mt-3">
+    <h6 class="card-heading">Pomodoro Sessions & XP</h6>
+    <div class="d-flex gap-4 align-items-center">
+        <div>
+            <div class="metric-value" style="font-size:1.3rem">@pomodoroCount</div>
+            <div class="metric-label">Sessions Completed</div>
+        </div>
+        <div>
+            <div class="metric-value" style="font-size:1.3rem">@(Auth.CurrentUser?.XpPoints ?? 0)</div>
+            <div class="metric-label">Total XP Points</div>
+        </div>
+        <div>
+            <div class="metric-value" style="font-size:1.3rem">🔥 @(Auth.CurrentUser?.StreakDays ?? 0)</div>
+            <div class="metric-label">Day Streak</div>
+        </div>
+    </div>
+</div>
+
 @code {
-    record SubjectStat(string Name, int Quiz, int Assignment);
-    List<SubjectStat> subjects = new()
+    List<StudyLog> studyLogs = new();
+    List<Subject> dbSubjects = new();
+    List<string> recommendations = new();
+    double totalStudyHours = 0;
+    int consistencyPct = 0;
+    int tasksCompleted = 0;
+    int weakAreas = 0;
+    int pomodoroCount = 0;
+    double maxH = 10;
+
+    string GetBarStyle(double hours)
     {
-        new("Math", 20, 28),
-        new("OOP", 40, 50),
-        new("Networking", 23, 51),
-        new("Physics", 17, 21)
-    };
-
-    double totalStudyHours = 6;
-    int consistencyPct = 60;
-    int tasksCompleted = 13;
-    int weakAreas = 11;
-
-    string GbarStyle(int val) => "height:" + (int)(val * 1.2) + "px";
+        double h = maxH == 0 ? 1 : maxH;
+        int px = (int)(hours / h * 110);
+        return "height:" + px + "px";
+    }
 
     protected override async Task OnInitializedAsync()
     {
         if (!Auth.IsLoggedIn) return;
         int uid = Auth.CurrentUser!.Id;
-        var logs = await Db.StudyLogs.Where(l => l.UserId == uid).ToListAsync();
-        totalStudyHours = Math.Round(logs.Sum(l => l.HoursStudied), 1);
+
+        // ✅ FIX: Sab real DB se
+        var today = DateTime.Today;
+        studyLogs = await Db.StudyLogs.Where(l => l.UserId == uid && l.Date >= today.AddDays(-6)).OrderBy(l => l.Date).ToListAsync();
+        dbSubjects = await Db.Subjects.Where(s => s.UserId == uid).OrderByDescending(s => s.WeaknessPercent).ToListAsync();
+
+        totalStudyHours = Math.Round(studyLogs.Sum(l => l.HoursStudied), 1);
         tasksCompleted = await Db.StudyTasks.CountAsync(t => t.UserId == uid && t.IsCompleted);
-        weakAreas = await Db.Subjects.CountAsync(s => s.UserId == uid && s.WeaknessPercent > 60);
-        consistencyPct = logs.Any() ? (int)(logs.Average(l => l.HoursStudied) / 10 * 100) : 60;
+        weakAreas = dbSubjects.Count(s => s.WeaknessPercent > 60);
+        pomodoroCount = await Db.PomodoroSessions.CountAsync(p => p.UserId == uid && p.IsCompleted);
+        consistencyPct = studyLogs.Any() ? (int)Math.Min(100, studyLogs.Average(l => l.HoursStudied) / 8 * 100) : 0;
+        maxH = studyLogs.Any() ? studyLogs.Max(l => l.HoursStudied) : 10;
+
+        // ✅ AI RECOMMENDATIONS: Rule-based smart suggestions
+        var upcomingExams = await Db.Exams.Where(e => e.UserId == uid && e.ExamDate >= today).OrderBy(e => e.ExamDate).ToListAsync();
+        var weakestSubject = dbSubjects.FirstOrDefault();
+
+        if (weakestSubject != null && weakestSubject.WeaknessPercent > 65)
+            recommendations.Add($"You are weak in {weakestSubject.Name} ({weakestSubject.WeaknessPercent}%). Study it today!");
+
+        if (upcomingExams.Any())
+        {
+            var next = upcomingExams.First();
+            int daysLeft = (int)(next.ExamDate - today).TotalDays;
+            recommendations.Add($"{next.SubjectName} exam is in {daysLeft} day(s). Prioritize revision!");
+        }
+
+        if (studyLogs.Any() && studyLogs.Last().HoursStudied < 3)
+            recommendations.Add("You studied less than 3 hours yesterday. Try to study more today.");
+
+        if (tasksCompleted == 0)
+            recommendations.Add("No tasks completed yet. Complete at least one task today!");
+
+        if (consistencyPct >= 80)
+            recommendations.Add("Excellent consistency! Keep it up.");
     }
 }
