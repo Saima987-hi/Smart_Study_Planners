@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Smart_Study_Planner.Models;
-using System.Collections.Generic;
-using System.Reflection.Emit;
+using SmartStudyPlanner.Models;
 
-namespace Smart_Study_Planner.Data
+namespace SmartStudyPlanner.Data
 {
-    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+    public class AppDbContext : DbContext
     {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<User> Users => Set<User>();
         public DbSet<StudyTask> StudyTasks => Set<StudyTask>();

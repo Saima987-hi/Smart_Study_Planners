@@ -1,4 +1,4 @@
-﻿namespace Smart_Study_Planner.Models
+﻿namespace SmartStudyPlanner.Models
 {
     public class User
     {
@@ -33,7 +33,6 @@
         public DateTime? DueDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public User? User { get; set; }
-        public string Status { get; set; } = "Pending"; // Pending, Scheduled, Completed
     }
 
     public class Subject

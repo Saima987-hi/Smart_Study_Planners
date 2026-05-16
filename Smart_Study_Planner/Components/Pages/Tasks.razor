@@ -1,7 +1,7 @@
 ﻿@page "/tasks"
-@using Smart_Study_Planner.Services
-@using Smart_Study_Planner.Models
-@using Smart_Study_Planner.Data
+@using SmartStudyPlanner.Services
+@using SmartStudyPlanner.Models
+@using SmartStudyPlanner.Data
 @using Microsoft.EntityFrameworkCore
 @inject AuthService Auth
 @inject AppDbContext Db
@@ -9,229 +9,173 @@
 
 @if (!Auth.IsLoggedIn) { Nav.NavigateTo("/login"); return; }
 
-<div class="task-page-wrapper">
-
-    <!-- Header -->
-    <div class="task-header">
-        <h2 class="task-page-title">Task Manager</h2>
-        <div class="task-stats-box">
-            <div class="stat-row"><span>Summary</span><span class="stat-num">@tasks.Count</span></div>
-            <div class="stat-row"><span>Completed</span><span class="stat-num">@tasks.Count(t => t.IsCompleted)</span></div>
-        </div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="task-toolbar">
-        <button class="btn-add-task" @onclick="OpenAddModal">
-            <i class="bi bi-plus-lg"></i> Add Task
-        </button>
-        <div class="filter-group">
-            <select class="filter-select" @bind="filterPriority">
-                <option value="">Priority</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-            </select>
-            <select class="filter-select" @bind="filterStatus">
-                <option value="">Status</option>
-                <option value="Completed">Completed</option>
-                <option value="Pending">Pending</option>
-                <option value="Scheduled">Scheduled</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Table -->
-    <div class="task-table-wrapper">
-        <table class="task-table">
-            <thead>
-                <tr>
-                    <th>Task Name</th>
-                    <th>Description</th>
-                    <th>Deadline</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var task in FilteredTasks)
-                {
-                    <tr>
-                        <td class="task-name-cell">@task.Title</td>
-                        <td class="task-desc-cell">@task.Description</td>
-                        <td class="task-date-cell">
-                            @if (task.DueDate.HasValue)
-                            {
-                                <i class="bi bi-calendar3"></i> 
-                                @task.DueDate.Value.ToString("MMM dd")
-                            }
-                            else
-                            {
-                                <i class="bi bi-clock"></i>
-                            }
-                        </td>
-                        <td>
-                            <span class="status-badge @GetStatusClass(task)">
-                                @if (task.IsCompleted)
-                                {
-                                    <i class="bi bi-check-circle-fill"></i>
-                                }
-                                @GetStatus(task)
-                            </span>
-                        </td>
-                        <td>
-                            <span class="priority-badge @task.Priority.ToLower()">@task.Priority</span>
-                        </td>
-                        <td class="action-cell">
-                            <button class="btn-icon edit" @onclick="() => OpenEditModal(task)">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn-icon delete" @onclick="() => DeleteTask(task)">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                        </td>
-                    </tr>
-                }
-                @if (!FilteredTasks.Any())
-                {
-                    <tr><td colspan="6" class="no-tasks">No tasks found.</td></tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Add/Edit Modal -->
-@if (showModal)
-{
-    <div class="modal-overlay" @onclick="CloseModal">
-        <div class="modal-box" @onclick:stopPropagation>
-            <div class="modal-header-row">
-                <h5>@(editingTask == null ? "Add New Task" : "Edit Task")</h5>
-                <button class="modal-close" @onclick="CloseModal"><i class="bi bi-x-lg"></i></button>
+<div class="tasks-page">
+    <!-- Add Task Form -->
+    <div class="dash-card mb-4">
+        <h6 class="card-heading">Add New Task</h6>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <input @bind="newTitle" class="form-control ssp-input" placeholder="Task title..." />
             </div>
-            <div class="modal-body-form">
-                <label>Task Name</label>
-                <input class="modal-input" @bind="formTitle" placeholder="Enter task name..." />
-
-                <label>Description</label>
-                <textarea class="modal-input" @bind="formDesc" placeholder="Enter description..." rows="2"></textarea>
-
-                <label>Priority</label>
-                <select class="modal-input" @bind="formPriority">
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
+            <div class="col-md-3">
+                <input @bind="newDesc" class="form-control ssp-input" placeholder="Description (optional)" />
+            </div>
+            <div class="col-md-2">
+                <select @bind="newPriority" class="form-select ssp-input">
+                    <option value="High">High Priority</option>
+                    <option value="Medium">Medium Priority</option>
+                    <option value="Low">Low Priority</option>
                 </select>
-
-                <label>Deadline</label>
-                <input class="modal-input" type="date" @bind="formDueDate" />
-
-                <label>Status</label>
-                <select class="modal-input" @bind="formStatus">
-                    <option value="Pending">Pending</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Completed">Completed</option>
-                </select>
-
-                @if (!string.IsNullOrEmpty(errorMsg))
-                {
-                    <div class="error-msg">@errorMsg</div>
-                }
-
-                <button class="btn-save-task" @onclick="SaveTask">
-                    @(editingTask == null ? "Add Task" : "Save Changes")
+            </div>
+            <div class="col-md-2">
+                <input @bind="newDueDate" type="date" class="form-control ssp-input" />
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-login w-100" @onclick="AddTask">
+                    <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
         </div>
+        @if (!string.IsNullOrEmpty(msg))
+        {
+            <div class="alert alert-info py-1 mt-2 small">@msg</div>
+        }
     </div>
-}
+
+    <!-- Task Filters -->
+    <div class="task-filters mb-3">
+        <button class="filter-btn @GetFilterClass("All")" @onclick="SetFilterAll">All (@tasks.Count)</button>
+        <button class="filter-btn @GetFilterClass("Pending")" @onclick="SetFilterPending">Pending (@tasks.Count(t => !t.IsCompleted))</button>
+        <button class="filter-btn @GetFilterClass("Done")" @onclick="SetFilterDone">Completed (@tasks.Count(t => t.IsCompleted))</button>
+    </div>
+
+    <!-- Tasks List -->
+    <div class="dash-card">
+        @if (!FilteredTasks.Any())
+        {
+            <div class="text-center py-4 text-muted">No tasks found.</div>
+        }
+        @foreach (var task in FilteredTasks)
+        {
+            <div class="task-list-item @(task.IsCompleted ? "task-completed" : "")">
+                <input type="checkbox" class="task-check" checked="@task.IsCompleted" @onchange="() => ToggleTask(task)" />
+                <div class="task-list-body">
+                    @if (editId == task.Id)
+                    {
+                        <input @bind="editTitle" class="form-control ssp-input mb-1" />
+                        <input @bind="editDesc" class="form-control ssp-input" placeholder="Description" />
+                    }
+                    else
+                    {
+                        <div class="task-list-title @(task.IsCompleted ? "text-decoration-line-through" : "")">@task.Title</div>
+                        @if (!string.IsNullOrEmpty(task.Description))
+                        {
+                            <div class="task-list-desc">@task.Description</div>
+                        }
+                    }
+                </div>
+                <div class="task-list-meta">
+                    <span class="priority-badge priority-@task.Priority.ToLower()">@task.Priority</span>
+                    @if (task.DueDate.HasValue)
+                    {
+                        <span class="due-date">@task.DueDate.Value.ToString("MMM dd")</span>
+                    }
+                </div>
+                <div class="task-list-actions">
+                    @if (editId == task.Id)
+                    {
+                        <button class="action-btn text-success" @onclick="() => SaveEdit(task)"><i class="bi bi-check-lg"></i></button>
+                        <button class="action-btn text-secondary" @onclick="CancelEdit"><i class="bi bi-x-lg"></i></button>
+                    }
+                    else
+                    {
+                        <button class="action-btn text-primary" @onclick="() => StartEdit(task)"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn text-danger" @onclick="() => DeleteTask(task)"><i class="bi bi-trash"></i></button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     List<StudyTask> tasks = new();
-    string filterPriority = "";
-    string filterStatus = "";
-    bool showModal = false;
-    StudyTask? editingTask = null;
+    string newTitle = "", newDesc = "", newPriority = "Medium";
+    DateTime? newDueDate;
+    string msg = "", filter = "All";
+    int editId = 0;
+    string editTitle = "", editDesc = "";
 
-    string formTitle = "", formDesc = "", formPriority = "Medium", formStatus = "Pending";
-    DateTime? formDueDate;
-    string errorMsg = "";
+    string GetFilterClass(string f) => filter == f ? "active" : "";
+    void SetFilterAll() => filter = "All";
+    void SetFilterPending() => filter = "Pending";
+    void SetFilterDone() => filter = "Done";
+    void CancelEdit() => editId = 0;
 
-    IEnumerable<StudyTask> FilteredTasks => tasks
-        .Where(t => (string.IsNullOrEmpty(filterPriority) || t.Priority == filterPriority))
-        .Where(t => string.IsNullOrEmpty(filterStatus) ||
-            (filterStatus == "Completed" && t.IsCompleted) ||
-            (filterStatus == "Pending" && !t.IsCompleted && t.DueDate == null) ||
-            (filterStatus == "Scheduled" && !t.IsCompleted && t.DueDate != null));
+    IEnumerable<StudyTask> FilteredTasks => filter switch
+    {
+        "Pending" => tasks.Where(t => !t.IsCompleted),
+        "Done" => tasks.Where(t => t.IsCompleted),
+        _ => tasks
+    };
 
     protected override async Task OnInitializedAsync()
     {
         if (!Auth.IsLoggedIn) return;
-        tasks = await Db.StudyTasks.Where(t => t.UserId == Auth.CurrentUser!.Id).ToListAsync();
+        await LoadTasks();
     }
 
-    void OpenAddModal()
+    async Task LoadTasks()
     {
-        editingTask = null;
-        formTitle = formDesc = errorMsg = "";
-        formPriority = "Medium"; formStatus = "Pending"; formDueDate = null;
-        showModal = true;
+        tasks = await Db.StudyTasks.Where(t => t.UserId == Auth.CurrentUser!.Id)
+                        .OrderByDescending(t => t.CreatedAt).ToListAsync();
     }
 
-    void OpenEditModal(StudyTask task)
+    async Task AddTask()
     {
-        editingTask = task;
-        formTitle = task.Title;
-        formDesc = task.Description ?? "";
-        formPriority = task.Priority;
-        formStatus = task.IsCompleted ? "Completed" : (task.DueDate != null ? "Scheduled" : "Pending");
-        formDueDate = task.DueDate;
-        errorMsg = "";
-        showModal = true;
-    }
-
-    void CloseModal() { showModal = false; errorMsg = ""; }
-
-    async Task SaveTask()
-    {
-        if (string.IsNullOrWhiteSpace(formTitle)) { errorMsg = "Task name is required."; return; }
-
-        if (editingTask == null)
+        if (string.IsNullOrWhiteSpace(newTitle)) { msg = "Title is required."; return; }
+        var task = new StudyTask
         {
-            var t = new StudyTask
-            {
-                UserId = Auth.CurrentUser!.Id,
-                Title = formTitle,
-                Description = formDesc,
-                Priority = formPriority,
-                IsCompleted = formStatus == "Completed",
-                DueDate = formDueDate
-            };
-            Db.StudyTasks.Add(t);
-            await Db.SaveChangesAsync();
-            tasks.Add(t);
-        }
-        else
-        {
-            editingTask.Title = formTitle;
-            editingTask.Description = formDesc;
-            editingTask.Priority = formPriority;
-            editingTask.IsCompleted = formStatus == "Completed";
-            editingTask.DueDate = formDueDate;
-            await Db.SaveChangesAsync();
-        }
-        CloseModal();
+            UserId = Auth.CurrentUser!.Id,
+            Title = newTitle,
+            Description = newDesc,
+            Priority = newPriority,
+            DueDate = newDueDate
+        };
+        Db.StudyTasks.Add(task);
+        await Db.SaveChangesAsync();
+        newTitle = ""; newDesc = ""; newPriority = "Medium"; newDueDate = null;
+        msg = "Task added!";
+        await LoadTasks();
+        await Task.Delay(1500);
+        msg = "";
+    }
+
+    async Task ToggleTask(StudyTask task)
+    {
+        task.IsCompleted = !task.IsCompleted;
+        await Db.SaveChangesAsync();
+    }
+
+    void StartEdit(StudyTask task)
+    {
+        editId = task.Id;
+        editTitle = task.Title;
+        editDesc = task.Description ?? "";
+    }
+
+    async Task SaveEdit(StudyTask task)
+    {
+        task.Title = editTitle;
+        task.Description = editDesc;
+        await Db.SaveChangesAsync();
+        editId = 0;
     }
 
     async Task DeleteTask(StudyTask task)
     {
         Db.StudyTasks.Remove(task);
         await Db.SaveChangesAsync();
-        tasks.Remove(task);
+        await LoadTasks();
     }
-
-    string GetStatus(StudyTask t) => t.IsCompleted ? "Completed" : (t.DueDate != null ? "Scheduled" : "Pending");
-    string GetStatusClass(StudyTask t) => t.IsCompleted ? "status-completed" : (t.DueDate != null ? "status-scheduled" : "status-pending");
 }

@@ -1,6 +1,6 @@
 ﻿@page "/"
 @page "/login"
-@using Smart_Study_Planner.Services
+@using SmartStudyPlanner.Services
 @inject AuthService Auth
 @inject NavigationManager Nav
 
@@ -11,94 +11,110 @@
 }
 
 <div class="login-wrapper">
+    <!-- Left Panel -->
     <div class="login-left">
         <div class="login-left-content">
+            <div class="login-circles">
+                <div class="circle c1"></div>
+                <div class="circle c2"></div>
+                <div class="circle c3"></div>
+            </div>
             <h1 class="login-headline">Smart Study Planner</h1>
             <p class="login-tagline">Unlock your academic potential</p>
         </div>
-        <div class="decor-circles"></div>
     </div>
 
+    <!-- Right Panel -->
     <div class="login-right">
-        <div class="login-card shadow-sm">
-            <div class="login-logo-container">
-                <div class="custom-logo">A</div>
+        <div class="login-card">
+            <div class="login-logo">
+                <span>A</span>
             </div>
 
             @if (!string.IsNullOrEmpty(errorMsg))
             {
-                <div class="alert alert-danger py-2 mb-3 small">@errorMsg</div>
+                <div class="alert alert-danger py-2 small">@errorMsg</div>
+            }
+            @if (!string.IsNullOrEmpty(successMsg))
+            {
+                <div class="alert alert-success py-2 small">@successMsg</div>
             }
 
-            <div class="login-form">
-                @if (!isRegister)
-                {
-                    <div class="input-container">
+            @if (!isRegister)
+            {
+                <!-- Login Form -->
+                <div class="login-form">
+                    <div class="input-group-custom">
                         <i class="bi bi-envelope"></i>
-                        <input @bind="email" type="email" placeholder="Email Address" />
+                        <input @bind="email" type="email" class="form-control" placeholder="Email Address" />
                     </div>
-
-                    <div class="input-container">
+                    <div class="input-group-custom">
                         <i class="bi bi-lock"></i>
-                        <input @bind="password" type="@passType" placeholder="Password" />
-                        <button class="pass-toggle-btn" @onclick="TogglePass">
+                        <input @bind="password" type="@passType" class="form-control" placeholder="Password" />
+                        <button class="pass-toggle" @onclick="TogglePass">
                             <i class="bi @eyeIcon"></i>
                         </button>
                     </div>
-
-                    <div class="forgot-password-box">
-                        <a href="javascript:void(0)" class="forgot-link">Forgot Password?</a>
+                    <div class="text-end mb-3">
+                        <a href="#" class="forgot-link">Forgot Password?</a>
                     </div>
-
-                    <button class="btn btn-main-login" @onclick="DoLogin" disabled="@loading">
+                    <button class="btn btn-login" @onclick="DoLogin" disabled="@loading">
                         @if (loading)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
                         }
                         Login
                     </button>
-
-                    <button class="btn btn-outline-register" @onclick="GoToRegister">
+                    <button class="btn btn-register" @onclick="GoToRegister">
                         Register as Student
                     </button>
-                }
-                else
-                {
-                    <div class="input-container">
+                </div>
+            }
+            else
+            {
+                <!-- Register Form -->
+                <div class="login-form">
+                    <div class="input-group-custom">
                         <i class="bi bi-person"></i>
-                        <input @bind="name" type="text" placeholder="Full Name" />
+                        <input @bind="name" type="text" class="form-control" placeholder="Full Name" />
                     </div>
-                    <div class="input-container">
+                    <div class="input-group-custom">
                         <i class="bi bi-envelope"></i>
-                        <input @bind="email" type="email" placeholder="Email Address" />
+                        <input @bind="email" type="email" class="form-control" placeholder="Email Address" />
                     </div>
-                    <div class="input-container">
+                    <div class="input-group-custom">
                         <i class="bi bi-lock"></i>
-                        <input @bind="password" type="@passType" placeholder="Password" />
+                        <input @bind="password" type="@passType" class="form-control" placeholder="Password" />
+                        <button class="pass-toggle" @onclick="TogglePass">
+                            <i class="bi @eyeIcon"></i>
+                        </button>
                     </div>
-
-                    <button class="btn btn-main-login" @onclick="DoRegister" disabled="@loading">
+                    <button class="btn btn-login" @onclick="DoRegister" disabled="@loading">
+                        @if (loading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
                         Create Account
                     </button>
-                    <button class="btn btn-outline-register" @onclick="GoToLogin">
+                    <button class="btn btn-register" @onclick="GoToLogin">
                         Back to Login
                     </button>
-                }
-            </div>
+                </div>
+            }
         </div>
     </div>
 </div>
 
 @code {
     string email = "", password = "", name = "";
-    string errorMsg = "";
+    string errorMsg = "", successMsg = "";
     bool loading = false, showPass = false, isRegister = false;
 
     string passType => showPass ? "text" : "password";
     string eyeIcon => showPass ? "bi-eye-slash" : "bi-eye";
 
     void TogglePass() => showPass = !showPass;
-    void GoToRegister() { isRegister = false; isRegister = true; errorMsg = ""; }
+    void GoToRegister() { isRegister = true; errorMsg = ""; }
     void GoToLogin() { isRegister = false; errorMsg = ""; }
 
     async Task DoLogin()
